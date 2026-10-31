@@ -4,16 +4,16 @@ Running log kept by the orchestrator session. Read this at the start of every se
 (see CLAUDE.md). Newest entries at the top of each section.
 
 ## Current state
-- **Phase:** 0 done (PR from `phase-0-setup`); starting phase 1 (data).
-- **Next:** phase 1 — FRED yields, FOMC event calendar, surprise series, text corpus.
+- **Phase:** 1 done; phase 2 (text) and phase-3 label tooling running on `phase-2-text` and `phase-3-label-tools` (subagent worktrees); codebook v0 drafted in `tmp/codebook_v0/`.
+- **Next:** verify phase 2 → codebook pilot round 1 (3 blind Explore labelers) → iterate.
 - **Interrupted batch jobs:** none.
 
 ## Phase status
 
 | # | Phase | Status | Verified | PR |
 |---|---|---|---|---|
-| 0 | Setup | done | yes | (this PR) |
-| 1 | Data | not started | | |
+| 0 | Setup | done | yes | #1 |
+| 1 | Data | done | yes | #2, #3, (phase PR) |
 | 2 | Text | not started | | |
 | 3 | Codebook | not started | | |
 | 4 | Validation sets | not started | | |
@@ -68,6 +68,36 @@ Running log kept by the orchestrator session. Read this at the start of every se
     0 = dovish, 1 = hawkish, 2 = neutral; year only), CC BY-NC 4.0 → download script.
   - Shah et al. annotation guide = paper Appendix C.2 / Table 10.
 
+### 2026-10-30 — Phase 1 (data) — done
+Built by 3 Sonnet subagents (1A yields+surprises, 1B corpus+calendar in worktrees, 1C
+integration); merged via PRs #2, #3 into `phase-1-data`. Outputs: `data/raw/fred/*`,
+`data/raw/jk/*`, `data/raw/text/fomc_documents.parquet`, `data/raw/MANIFEST.csv`
+(source, SHA-256, license, committed?), `data/processed/{yields_cmt_daily, yields_gsw_daily,
+fomc_events, calendar_reconciliation, event_days}.csv`, `results/tables/coverage_events.{csv,tex}`.
+`run_all.py --only data` rebuilds it all.
+- **Events 2000–2025: 433** = 224 statements (207 scheduled, 17 unscheduled incl. 2020
+  notation votes and the 2020-08-27 / 2025-08-22 framework statements) + 209 minutes.
+  428 have text; no text for `min_19991221` (released 2000-02-03), `stmt_20200319`,
+  `stmt_20200331`, `stmt_20200827`, `stmt_20250822`. 30 dataset minutes rows are exact
+  duplicates of matched documents (conference-call stubs) and are excluded with reasons.
+- **Calendar reconciliation:** 30 cases across Fed pages / USMPD / Bauer–Swanson / TDW /
+  dataset, none unresolved — e.g. 2008-01-21 call → released 2008-01-22 08:20; the
+  dataset's "2008-08-08" documents are the Aug 5 meeting; four 2009 docs dated a day
+  early; 2007-10-09 one minutes release covering Sep 18 + Aug 10/16 calls.
+- **Moved to the next trading day (3):** 2010-05-09 (Sun 21:15), 2020-03-15 (Sun 17:00),
+  `min_20040921` released 2004-11-11 (Veterans Day). None after the close.
+- **Surprises:** B–S MPS for 205/224 statements (missing: 2001-09-17 by design, 2010-05-09,
+  2024–25); USMPD STMT 223, J-K 221; USMPD minutes 169/209 (from 2005). One-day/one-week
+  date fallbacks logged (USMPD 2019-10-04 → 2019-10-11; USMPD minutes 2025-12-31 →
+  2025-12-30). Pairwise corr of the surprise series 0.95–0.99.
+- **Verified myself:** read `map_to_trading_day`, `event_days_table`, `change` (break
+  rule (prev, event]); recomputed d2Y/d10Y/dslope from raw FRED for 6 events incl. the
+  Sunday, MLK-weekend and Veterans-Day cases — all exact; spot-checked release times
+  (2022-03-16 14:00, 2012-12-12 12:30, 2004-06-30 14:15). Plausibility: std d2Y 7.6bp on
+  statement days vs 5.3 minutes days vs 5.5 all days; corr(d2Y, MPS) = 0.52 on scheduled
+  statement days (n=191); largest |d2Y| days 2008-01-22 (−28), 2008-03-11 (+27),
+  2023-12-13 (−27). 108 tests pass. No surprise values in committed files.
+
 ## For Dylan
 - (nothing yet)
 
@@ -83,6 +113,15 @@ Running log kept by the orchestrator session. Read this at the start of every se
   "pre-commit install" and a later `conda … -n ftyields`. Workarounds in use: split
   commands; write files with the Write tool instead of heredocs.
 
+- **Labeler blinding, residual leak (optional):** every agent's environment block shows
+  the working directory `…\fomc-tone-yields`, so labelers can see the word "yields" in
+  the folder name. If you want strict blinding for the production label run, you could
+  run labelling from a neutrally named clone/worktree path (e.g. `C:\work\fomc-text`).
+  Not blocking; labelling proceeds and the paper will note it.
+- **New agent definition:** I added `.claude/agents/fomc-labeler.md` (Read/Write only,
+  no CLAUDE.md). It isn't a settings or hook file, but it is under `.claude/`; delete it
+  if you'd rather not have it.
+
 ## Proposed deviations
 - (none)
 
@@ -96,3 +135,48 @@ Running log kept by the orchestrator session. Read this at the start of every se
   transformers stays on 4.x (`<5`) to avoid the v5 API change.
 - 2026-10-30: `run_all.py` stops at the first failing implemented stage (later stages
   depend on earlier ones).
+- 2026-10-30 (phase 1): **Event-day alignment.** Trading days = FRED DGS10 business days.
+  Release at ET datetime d → event day t = d's date if trading day and time < 15:30 ET
+  (CMT quotes are taken ~3:30pm), else the next trading day. Change = y(t) − y(t−1).
+  Recorded in `config.yaml` → `events`.
+- 2026-10-30 (phase 1): **Event dates come from authoritative sources, not the text
+  dataset.** The vtasca dataset's dates are wrong for some unscheduled actions (e.g.
+  the 2008-01-21 call: the cut was announced 2008-01-22 08:20 ET). Statements: USMPD /
+  Bauer–Swanson timestamps + Fed calendar pages; minutes: Fed pages, USMPD, TDW master
+  file; every disagreement logged in `data/processed/calendar_reconciliation.csv`.
+- 2026-10-30 (phase 1): **Rate surprise.** Main = Bauer–Swanson MPS (bp), which ends
+  2023-12-13, so surprise-controlled statement regressions run 2000–2023 (the handoff's
+  fallback rule: "only if unavailable" → it is unavailable for 2024–25). Robustness:
+  MPS_ORTH (NA for 13 dates incl. most of 2020), USMPD STMT (through 2025; different
+  construction), Jarociński–Karadi pc1. Minutes days: surprise = 0 by construction;
+  USMPD minutes-window surprise available from 2005 as an optional control.
+- 2026-10-30 (phase 1): **30Y suspension window (revised).** I expected DGS30 to be
+  missing 2002-02-19 … 2006-02-08; verified that the current FRED file instead fills it
+  with Treasury's extrapolated 30-year rate (a different construction), with breaks at
+  the edges: 2002-02-19 Δ30Y = +17bp vs Δ20Y = +3; 2006-02-09 Δ30Y = −16bp vs Δ20Y = −3.
+  Inside the window daily changes are smooth. Main line: keep the official series, and
+  set to NaN any change whose interval crosses a break date (`fred.series_breaks`;
+  neither break date is an FOMC event day, but 60-day local projections can cross them).
+  Robustness: GSW zero-coupon factors (SVENY02/05/10/30; no gaps), and dropping
+  `fred.suspended_30y_window`.
+- 2026-10-30 (phase 1): **BLAS switched MKL → OpenBLAS.** conda-forge numpy came linked
+  to MKL, whose delay-loaded DLLs crash (0xc06d007f) on any linalg call when python.exe is
+  run without `Library/bin` on PATH (the way every script and agent runs it). Pinned
+  `libblas=*=*openblas`; verified lstsq/polyfit/SVD/statsmodels HAC OLS, torch CUDA and
+  the RoBERTa pipeline all work; `tests/test_env.py` guards it.
+- 2026-10-30 (phase 3 prep): **Labeler blinding.** Verified from the Claude Code docs
+  that general-purpose and custom subagents load CLAUDE.md (which states the research
+  question) unless the agent definition sets `omitClaudeMd: true`; Explore/Plan skip it.
+  Created `.claude/agents/fomc-labeler.md` (tools: Read, Write; `omitClaudeMd: true`) —
+  an agent *definition*, not a settings/hook file; it only removes capabilities. Custom
+  agents load at session start, so it is usable from the **next session**. Until then,
+  pilot labelers run as built-in **Explore** agents with a `model` override; a canary
+  Explore agent confirmed it sees no CLAUDE.md, no research question and no mention of
+  yields, except the working-directory path `…\fomc-tone-yields` in its environment
+  block. That residual leak (the folder name) can't be removed from inside a session;
+  logged as a limitation and under "Requests for Dylan".
+- 2026-10-30 (phase 1): `data/raw/** -text` in `.gitattributes` so committed raw files
+  are byte-identical to the downloads (manifest SHA-256 stays valid).
+- 2026-10-30: **Note for phases 5–6.** FOMC-RoBERTa was fine-tuned on the TDW labels,
+  so RoBERTa-vs-TDW agreement is (partly) in-sample. Report it with that caveat; use the
+  TDW test split and say we can't rule out that the released model saw it.
