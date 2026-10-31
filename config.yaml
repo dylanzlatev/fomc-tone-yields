@@ -203,8 +203,10 @@ distill:
   warmup_frac: 0.1
   epochs: 6
   patience: 2                          # early stopping: epochs without validation improvement
-  batch_size: 8                        # per step (RoBERTa-large on 8 GB); effective batch = batch_size * grad_accum
-  grad_accum: 4
+  batch_size: 4                        # per step; effective batch = batch_size * grad_accum (worst case 4x256 tokens peaks at 6.9 GiB for RoBERTa-large)
+  grad_accum: 8
+  freeze_embeddings: false             # saves ~0.6 GiB if memory is tight
+  grad_checkpointing: false            # saves ~1 GiB at batch 8 (about 30% slower)
   amp: true                            # fp16 autocast for TRAINING only; inference is fp32
   test_years: [2003, 2009, 2014, 2019, 2023]
   val_years: [2006, 2017]
