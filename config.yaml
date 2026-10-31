@@ -108,6 +108,7 @@ sources:
   jk_readme: https://raw.githubusercontent.com/marekjarocinski/jkshocks_update_fed/main/README.md
   jk_csv: https://raw.githubusercontent.com/marekjarocinski/jkshocks_update_fed/main/shocks_fed_jk_t.csv
   tdw_hf_dataset: gtfintechlab/fomc_communication
+  tdw_master_xlsx: https://raw.githubusercontent.com/gtfintechlab/fomc-hawkish-dovish/main/data/master_files/master_mm_final_Oct_2024.xlsx
   fed_calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
   fed_historical: https://www.federalreserve.gov/monetarypolicy/fomchistorical{year}.htm
 
