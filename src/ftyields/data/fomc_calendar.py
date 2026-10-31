@@ -43,8 +43,6 @@ FED_ROOT = "https://www.federalreserve.gov"
 FED_LICENSE = "U.S. government work (federalreserve.gov), public domain"
 SFFED_LICENSE = "no license stated; SF Fed site policies"
 TDW_LICENSE = "CC BY-NC 4.0"
-TDW_URL = ("https://raw.githubusercontent.com/gtfintechlab/fomc-hawkish-dovish/main/"
-           "data/master_files/master_mm_final_Oct_2024.xlsx")
 SLEEP_S = 1.0           # politeness delay between requests to federalreserve.gov
 PROXIMITY_DAYS = 7      # window for fallback matching of misdated documents/rows
 
@@ -341,7 +339,7 @@ def download_sources(cfg: dict) -> dict[str, Path]:
         "usmpd": _cached_fetch("usmpd_xlsx", src["usmpd_xlsx"], f"{d}/USMPD.xlsx", SFFED_LICENSE, False, cfg),
         "bs": _cached_fetch("bauer_swanson_xlsx", src["bauer_swanson_xlsx"],
                             f"{d}/monetary-policy-surprises-data.xlsx", SFFED_LICENSE, False, cfg),
-        "tdw": _cached_fetch("tdw_master_mm_final_oct_2024", TDW_URL,
+        "tdw": _cached_fetch("tdw_master_mm_final_oct_2024", src["tdw_master_xlsx"],
                              f"{d}/master_mm_final_Oct_2024.xlsx", TDW_LICENSE, False, cfg),
     }
     return paths

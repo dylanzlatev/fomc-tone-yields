@@ -1,10 +1,10 @@
-"""Tests for ftyields.data.calendar (parsers, reconciliation rules, trading-day mapping). No network."""
+"""Tests for ftyields.data.fomc_calendar (parsers, reconciliation rules, trading-day mapping). No network."""
 from datetime import date
 
 import pandas as pd
 import pytest
 
-from ftyields.data import calendar as cal
+from ftyields.data import fomc_calendar as cal
 
 CFG = {"events": {"statement_release_time_et": "14:00", "minutes_release_time_et": "14:00"}}
 

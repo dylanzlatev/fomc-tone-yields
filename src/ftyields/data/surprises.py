@@ -27,9 +27,6 @@ from ftyields.config import load_config, repo_root
 from ftyields.data.download import fetch
 
 NO_LICENSE = "no license stated; SF Fed site policies"
-USMPD_ZIP_URL = "https://www.frbsf.org/wp-content/uploads/monetary-policy-surprises.zip"
-JK_README_URL = ("https://raw.githubusercontent.com/marekjarocinski/jkshocks_update_fed/"
-                 "main/README.md")
 PP_TO_BP = 100.0   # all three sources report percentage points
 
 STATEMENT_COLUMNS = ["date", "bs_time_et", "bs_unscheduled", "bs_mps", "bs_mps_orth",
@@ -216,7 +213,7 @@ def main(cfg: dict | None = None) -> None:
     bs = clean_bs(bs_raw)
 
     # ---- USMPD
-    zpath = fetch("usmpd_zip", USMPD_ZIP_URL, dl / "monetary-policy-surprises.zip",
+    zpath = fetch("usmpd_zip", cfg["sources"]["usmpd_zip"], dl / "monetary-policy-surprises.zip",
                   license=NO_LICENSE, committed=False, cfg=cfg)
     udir = root / dl / "usmpd_mps"
     safe_extract(zpath, udir)
@@ -237,7 +234,7 @@ def main(cfg: dict | None = None) -> None:
                     license="CC BY 4.0", committed=True, cfg=cfg)
     (jk_path.parent / "ATTRIBUTION.md").write_text(JK_ATTRIBUTION, encoding="utf-8",
                                                    newline="\n")
-    jk_readme = fetch("jk_readme", JK_README_URL, dl / "jk_README.md", license="CC BY 4.0",
+    jk_readme = fetch("jk_readme", cfg["sources"]["jk_readme"], dl / "jk_README.md", license="CC BY 4.0",
                       committed=False, cfg=cfg)
     jk_lines = [ln for ln in jk_readme.read_text(encoding="utf-8").splitlines()
                 if ln.strip().startswith("- pc1")]
