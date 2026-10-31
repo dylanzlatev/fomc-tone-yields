@@ -67,17 +67,48 @@ text:
   hf_dataset: vtasca/fomc-statements-minutes
 
 # Event alignment rule:
-#   A document released on trading day t maps to the change in yields from the
-#   close of t-1 to the close of t (FOMC statements are released at 2:00pm ET,
-#   before the close, so the day-t close contains the reaction).
-#   A release on a non-trading day maps to the next trading day.
+#   Trading days = dates on which FRED publishes DGS10 (Treasury CMT business days).
+#   CMT yields are read from quotes at about 3:30pm ET. A release at ET datetime d
+#   maps to event day t = d's date if that is a trading day and the release time is
+#   before `yield_close_time_et`; otherwise t = the next trading day after d's date.
+#   The event-day change is y(t) - y(t-1), close to close, with t-1 the previous
+#   trading day. Statements come out at 2:00pm ET (2:15pm before 2013), so the
+#   day-t close contains the reaction; pre-open unscheduled announcements (e.g.
+#   2008-01-22 08:20) map to the same day; weekend releases (2020-03-15, a Sunday)
+#   map to the next trading day.
 events:
   window: close_to_close
   pre_offset_trading_days: -1    # close t-1
   post_offset_trading_days: 0    # close t
-  statement_release_time_et: "14:00"
+  statement_release_time_et: "14:00"   # default when no timestamp is known
+  minutes_release_time_et: "14:00"
+  yield_close_time_et: "15:30"
   non_trading_day_rule: next_trading_day
-  # Minutes release dates / intraday handling: TBD (phase 1)
+
+# External sources. Files with unclear or non-commercial licenses are downloaded to
+# downloads.dir (gitignored) and only their manifest rows are committed.
+downloads:
+  dir: data/interim/downloads
+  manifest: data/raw/MANIFEST.csv
+sources:
+  fred_csv: https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}
+  gsw_csv: https://www.federalreserve.gov/data/yield-curve-tables/feds200628.csv
+  bauer_swanson_xlsx: https://www.frbsf.org/wp-content/uploads/monetary-policy-surprises-data.xlsx
+  bauer_swanson_sheet: FOMC (update 2023)
+  usmpd_xlsx: https://www.frbsf.org/wp-content/uploads/USMPD.xlsx
+  jk_csv: https://raw.githubusercontent.com/marekjarocinski/jkshocks_update_fed/main/shocks_fed_jk_t.csv
+  tdw_hf_dataset: gtfintechlab/fomc_communication
+  fed_calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+  fed_historical: https://www.federalreserve.gov/monetarypolicy/fomchistorical{year}.htm
+
+# Monetary-policy rate surprise used as the control.
+#   Main: Bauer-Swanson (2023) MPS, which ends 2023-12-13, so surprise-controlled
+#   statement regressions run through 2023. 2024-2025 and alternative measures are
+#   robustness checks. Minutes-release days have no policy action (surprise = 0).
+surprise:
+  main: bs_mps
+  main_last_date: 2023-12-13
+  alternatives: [bs_mps_orth, usmpd_stmt, jk_pc1]
 
 scoring:
   roberta_model: gtfintechlab/FOMC-RoBERTa
