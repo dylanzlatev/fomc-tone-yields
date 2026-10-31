@@ -4,9 +4,23 @@ Running log kept by the orchestrator session. Read this at the start of every se
 (see CLAUDE.md). Newest entries at the top of each section.
 
 ## Current state
-- **Phase:** 1 done; phase 2 (text) and phase-3 label tooling running on `phase-2-text` and `phase-3-label-tools` (subagent worktrees); codebook v0 drafted in `tmp/codebook_v0/`.
-- **Next:** verify phase 2 → codebook pilot round 1 (3 blind Explore labelers) → iterate.
-- **Interrupted batch jobs:** none.
+- **Phase:** 4 (validation sets) in progress on `phase-4-validation`. Phases 0–3 merged
+  (PRs #1–#7); codebook v2 frozen (tag `codebook-v2`).
+- **Running / just launched (session 1):** gold set (350 items, 2 batches of 175) being
+  labelled by 3 blind Explore labelers → `labels/out/gold/{sonnet,opus-low,opus-med}/`;
+  Sonnet subagent on `phase-4-validation-tools` building Dylan's 100-sentence sheet
+  (`labels/human/`), the TDW loader and `ftyields.label.validation` tables.
+- **Next session — start here:**
+  1. Restart loads `.claude/agents/fomc-labeler.md` (Read/Write, no CLAUDE.md). Verify
+     with a canary prompt that it sees no CLAUDE.md; then use it for all labelling.
+  2. Label the gold set with **Haiku** via `fomc-labeler` (`labels/out/gold/haiku/`),
+     then run `python -m ftyields.label.validation` → production-labeler choice
+     (cheapest within ~5 points of the best vs the leave-out consensus).
+  3. Phase 5: RoBERTa sentence scoring on GPU; ~10k stratified training labels with the
+     chosen labeler (batches of 300, resumable via `python -m ftyields.label pending`);
+     distillation.
+- **Interrupted batch jobs:** none yet (check `labels/out/gold/*/` — each labeler must
+  have batch_0001 and batch_0002; re-run any missing batch with the same prompt).
 
 ## Phase status
 
@@ -15,8 +29,8 @@ Running log kept by the orchestrator session. Read this at the start of every se
 | 0 | Setup | done | yes | #1 |
 | 1 | Data | done | yes | #2, #3, #4 |
 | 2 | Text | done | yes | #6 |
-| 3 | Codebook | done (v2 frozen) | yes | #5, (phase PR) |
-| 4 | Validation sets | not started | | |
+| 3 | Codebook | done (v2 frozen) | yes | #5, #7 |
+| 4 | Validation sets | done (human pending) | yes | (phase PR) |
 | 5 | Scoring | not started | | |
 | 6 | Measurement results | not started | | |
 | 7 | Indices | not started | | |
@@ -225,6 +239,34 @@ Sonnet subagent in a worktree; reviewed by me, sent back once (short-sentence ru
   Caveat for the paper: three same-family models; the high κ partly reflects correlated
   judgements, which is why Dylan's 100 labels and TDW are the independent checks.
 
+### 2026-10-30 — Phase 4 (validation sets) — done
+- **(a) Gold set:** 350 unique sentences (`python -m ftyields.label.gold`; statements ×3,
+  policy-like ×2.5 weight; pilot items and procedural-only uids excluded; 134 policy-like).
+  Labelled blind by **Sonnet, Opus-low, Opus-medium** (Explore agents, identical prompts).
+  Agreement (`results/tables/gold_agreement.csv`): function κ 0.959, topic κ 0.958,
+  direction exact 87.7%, α 0.949, full match 83.7%; 0 items without a function majority.
+  Majority vote → `labels/gold/gold_majority.jsonl`. I read a random sample of 14 majority
+  labels against their sentences: all sensible.
+- **Why not Haiku in the gold trio:** Explore-role Haiku refuses to write files, and
+  piping 350 lines through the orchestrator is wasteful; Haiku is labelled next session
+  with `fomc-labeler` and scored as a *candidate* (it never enters the gold vote).
+- **(b) Dylan's sheet:** `labels/human/human_sheet.csv` (100 items drawn from inside the
+  gold set, stratified by doc type × policy-like, floor 5 per stratum; blank label
+  columns) + `labels/human/INSTRUCTIONS.md` (condensed from codebook v2, ~1,200 words).
+- **(c) TDW:** `gtfintechlab/fomc_communication` downloaded (CC BY-NC → not committed;
+  manifest rows only); test 496 → 479 after dropping 17 sentences also in train
+  (dovish 130 / hawkish 109 / neutral 240); written as labelling set `tdw_test` (2
+  batches, gitignored) for the Claude-direct comparison in phase 5.
+- **Validation tables** (`python -m ftyields.label.validation`): `gold_agreement`,
+  `labeler_vs_reference` (vs gold majority and vs leave-out consensus),
+  `human_vs_models` (status "pending" until the sheet is filled; reruns fill it in).
+- **Production-labeler choice — provisional, not yet made.** Leave-out full match:
+  Opus-low 97.0% (n=302), Opus-med 96.4% (304), Sonnet 89.6% (327). The Opus numbers are
+  inflated because each Opus run's reference contains the other Opus run (same model).
+  Final choice after (i) Haiku's gold labels and (ii) Dylan's 100 as an independent
+  reference; default meanwhile: Sonnet, with Opus-low if Sonnet trails by > 5 points on
+  the human reference.
+
 ## For Dylan
 - **Codebook ready to review** — `codebook/codebook.md` (v2, frozen, tag `codebook-v2`) with
   the reasoning for every rule in `codebook/CHANGELOG.md` and per-round agreement in
@@ -233,6 +275,12 @@ Sonnet subagent in a worktree; reviewed by me, sent back once (short-sentence ru
   coded dovish (Shah et al. code it hawkish); implementation/market-functioning
   operations coded POLICY 0; same-topic contrasts netted into one aspect. I'm continuing
   with v2; if your feedback changes a definition, I'll bump the version and relabel.
+- **Your 100 labels** — `labels/human/human_sheet.csv` with instructions in
+  `labels/human/INSTRUCTIONS.md` (≈2 pages; full rules in the codebook). Fill
+  function/topic/direction (second aspect optional) and confidence; save as CSV. Then
+  `python -m ftyields.label.validation` regenerates `results/tables/human_vs_models.*`
+  automatically. Nothing is waiting on it; it is the independent human anchor and will
+  also settle the production-labeler choice.
 
 ## Requests for Dylan
 - **Branch protection:** `main` now exists on GitHub. Apply `handoff/protect_main.json`

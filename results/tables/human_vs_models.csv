@@ -1,0 +1,5 @@
+reference,status,note,n_human_labelled,n_human_blank,n_human_invalid,n_items,function_pct,function_kappa,topic_n_items,topic_pct,topic_kappa,direction_exact_pct,direction_within1_pct,direction_sign_pct,direction_qwk,full_match_pct
+gold_majority,pending,no human labels yet,0,100,0,,,,,,,,,,,
+opus-low,pending,no human labels yet,0,100,0,,,,,,,,,,,
+opus-med,pending,no human labels yet,0,100,0,,,,,,,,,,,
+sonnet,pending,no human labels yet,0,100,0,,,,,,,,,,,
