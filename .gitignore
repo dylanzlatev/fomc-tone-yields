@@ -1,2 +1,40 @@
 # Handoff staging folder (local only)
 handoff/
+
+# Local / intermediate artifacts
+tmp/
+data/interim/
+models/
+checkpoints/
+runs/
+
+# Model weights and checkpoints
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+*.onnx
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.ipynb_checkpoints/
+.env
+
+# LaTeX build files (compiled paper PDF is committed, so PDFs are NOT ignored)
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.xdv
+
+# conda env-create temp files
+condaenv.*.requirements.txt
