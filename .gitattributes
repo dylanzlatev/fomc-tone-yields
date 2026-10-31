@@ -1,0 +1,5 @@
+# Keep LF endings for scripts and config so bash hooks work on fresh checkouts
+* text=auto eol=lf
+*.pdf binary
+*.xlsx binary
+*.parquet binary
