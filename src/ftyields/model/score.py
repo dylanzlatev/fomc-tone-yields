@@ -241,13 +241,17 @@ def main(cfg: dict[str, Any]) -> None:
     if det_diff > float(sc["determinism_tol"]):
         raise RuntimeError(f"Non-deterministic scoring: max diff {det_diff} > {sc['determinism_tol']}")
 
-    # --- batch-composition sensitivity (informational): random subset, different batches
+    # --- batch-composition invariance: random subset, different batches, must match the full run
     rng = np.random.default_rng(int(cfg["seed"]) + 1)
     rs = rng.choice(len(uniq), size=min(n_chk, len(uniq)), replace=False)
     pr = predict_probs(tok, model, [uniq[i] for i in rs], n_used[rs], max_length=max_len,
                        batch_size=bs, fp16=fp16, device=device)
-    print(f"[score] batch-composition sensitivity on {len(rs)} random sentences: "
-          f"max |prob diff| = {np.abs(pr - probs_u[rs]).max():.2e}")
+    comp_diff = float(np.abs(pr - probs_u[rs]).max())
+    print(f"[score] batch-composition check on {len(rs)} random sentences: "
+          f"max |prob diff| = {comp_diff:.2e}")
+    if comp_diff > float(sc["batch_composition_tol"]):
+        raise RuntimeError(f"Scores depend on batch composition: {comp_diff} > "
+                           f"{sc['batch_composition_tol']}")
 
     # --- map back to one row per sent_id
     scored_u = probs_to_scores(probs_u, idx)
