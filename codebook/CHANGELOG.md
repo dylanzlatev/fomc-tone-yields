@@ -2,6 +2,23 @@
 
 Not shown to labelers (they see only `codebook.md`).
 
+## v2 — 2026-10-30 (after pilot round 2)
+Round 2 (100 fresh items, v1): function κ 0.922 (93% all-agree), topic κ 0.951,
+direction all-exact 81%, α_interval 0.917, full match 74%; 26 disagreements, most of
+them ±1 strength calls. v1's same-topic netting rule worked (no labeler split same-topic
+contrasts). Changes:
+- **Observed money-market conditions** (policy rate vs target, facility/repo usage and
+  why it changed) → ASSESSMENT/FINANCIAL 0; actions/decisions → POLICY (3 function splits).
+- **Purchase pace**: changes in pace with an unchanged total, or for market functioning,
+  → 0; only total size / holdings carry direction. POLICY row reworded accordingly.
+- **Non-stance dissents** → 0. **Caution/patience without a stated direction** → 0
+  (replaced the v0 anchor "will be patient as it determines future adjustments", whose
+  direction was implicit, with "patient in beginning to normalize").
+- **Arguments about a policy choice** → POLICY with the direction argued for.
+- **Unevaluated numbers** → 0; **imports alone** → 0; **staff research/model findings**
+  → PROCEDURAL; **premise clauses** are not separate aspects.
+- GENERAL definition no longer lists "the expansion" (contradicted the v1 topic rule).
+
 ## v1 — 2026-10-30 (after pilot round 1)
 Round 1 (100 items; Haiku, Sonnet, Opus-low): function Fleiss κ 0.976, topic κ 0.932,
 direction all-exact 80%, Krippendorff α (interval) 0.914; 23 items with any primary-label

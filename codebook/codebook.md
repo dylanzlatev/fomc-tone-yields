@@ -1,6 +1,6 @@
 # Codebook for labelling central-bank policy-committee sentences
 
-**Version v1** (pilot round 2)
+**Version v2** (pilot round 3)
 
 You will label sentences taken from the written communications of a monetary-policy
 committee: its post-meeting statements and the minutes of its meetings. The
@@ -59,6 +59,15 @@ Rules for choosing:
   tighten.
 - Recommendations, preferences or reports by staff or by the operations manager about
   operational details (collateral, counterparties, technical authorities) are PROCEDURAL.
+- **Observed money-market conditions** — where the policy rate or other short-term rates
+  traded relative to the target, usage of the committee's facilities and repo
+  operations, and the reasons for changes in them — are ASSESSMENT/FINANCIAL with
+  direction 0. What the committee or its operations desk **does or decides** is POLICY.
+- **Arguments about a policy choice** ("a significant delay in raising the rate risked a
+  buildup of inflation pressures") are POLICY, with the direction of the policy the
+  argument supports.
+- Summaries of staff **research or model analysis** that do not describe current
+  conditions, the outlook or the stance of policy are PROCEDURAL.
 - Section headings, footnote markers and fragments with no content are PROCEDURAL.
 
 ---
@@ -71,7 +80,7 @@ Rules for choosing:
 | `LABOR` | Employment, unemployment, job gains, payrolls, hours, participation, job openings, labor-market slack or tightness, wages and compensation, labor productivity. |
 | `ACTIVITY` | Output and growth, consumer spending, business investment, housing and house prices, industrial production, inventories, government spending, exports, imports and the trade balance, sentiment and confidence of households and businesses. |
 | `FINANCIAL` | Financial conditions: asset prices, interest rates on loans and securities, credit availability and credit spreads, bank lending and bank health, funding strains, financial stability, the exchange value of the dollar, financial spillovers from abroad. |
-| `GENERAL` | The economy as a whole or both goals at once, with no single area dominant: "the economic outlook", "the balance of risks", "overall uncertainty", "the expansion". |
+| `GENERAL` | The balance of risks, overall uncertainty, or both goals at once, with no single area dominant: "the balance of risks", "risks to the outlook", "overall uncertainty". |
 
 Choosing between topics:
 - "Economic activity", "economic growth", "the recovery", "the expansion", "output",
@@ -103,10 +112,10 @@ earlier statements or guess how it differs from what was said before.
 |---|---|---|
 | INFLATION | Inflation high, rising or above goal; rising inflation expectations; rising energy, commodity or import prices; broad cost pressures | Inflation low, falling or below goal; falling inflation expectations; falling energy or commodity prices; easing cost pressures |
 | LABOR | Strong or tight labor market; job gains strong; unemployment falling or low; wages rising quickly; labor shortages | Weak labor market; job losses; unemployment rising or high; slack; slow wage growth. Faster productivity growth is mildly dovish (it eases cost pressures) |
-| ACTIVITY | Strong or accelerating growth, spending, investment, housing; rising house prices; output above its sustainable level | Weak, slowing or contracting activity; falling house prices; narrowing exports / widening trade deficit (it subtracts from growth); output below its sustainable level |
+| ACTIVITY | Strong or accelerating growth, spending, investment, housing; rising house prices; output above its sustainable level | Weak, slowing or contracting activity; falling house prices; falling exports / a trade deficit widening because exports fell (it subtracts from growth); output below its sustainable level. Changes in imports alone → 0 |
 | FINANCIAL | Easing financial conditions: rising asset prices, narrowing credit spreads, looser credit, rapid credit growth; a weaker dollar | **Financial stress** and tightening conditions: falling asset prices, widening spreads, tighter credit, bank or funding strains, market turmoil, a stronger dollar |
 | GENERAL | Upside risks to inflation; an economy described as overheating | Downside risks to growth or employment; elevated uncertainty that weighs on the outlook |
-| POLICY | Raising the rate; signalling future increases; reducing the balance sheet or slowing purchases; removing accommodation; firming | Cutting the rate; signalling future cuts or an extended period of low rates; expanding the balance sheet or purchases; patience; adding accommodation; easing |
+| POLICY | Raising the rate; signalling future increases; reducing the balance sheet or the total amount of purchases; ending purchases early; removing accommodation; firming | Cutting the rate; signalling future cuts or an extended period of low rates; expanding the balance sheet or the total amount of purchases; patience about raising the rate; adding accommodation; easing |
 
 - Merely **reporting** a change in interest rates, or in what investors expect for
   policy, with no statement about financial conditions or the economy → FINANCIAL with
@@ -120,6 +129,13 @@ earlier statements or guess how it differs from what was said before.
   dovish, a higher estimate → hawkish (POLICY).
 - Outcomes described as **at or near the goals** (inflation near 2 percent, maximum
   employment, sustained growth) → 0.
+- A **number reported without evaluative wording** ("prices rose 2.3 percent over the
+  past 12 months") → 0; direction comes from words such as rising, elevated, weak, below.
+- **Pace of securities purchases:** slowing or speeding up purchases while the announced
+  total stays the same, or because market functioning has improved or worsened → 0;
+  changing the total amount or the size of holdings → ± as in the POLICY row.
+- **Caution or patience about "adjustments" without a stated direction** → 0; with a
+  stated direction it counts ("patient in beginning to raise the rate" → −1).
 - PROCEDURAL is always 0.
 
 ### 4.2 Strength
@@ -146,7 +162,8 @@ all participants", "participants generally" or "the Committee" are not hedged.
 
 **Dissents** are POLICY with the direction the dissenting member wanted (a preference
 for a higher rate is +, for a lower rate is −), and as a single member's view they
-are hedged: strength 1.
+are hedged: strength 1. A dissent about something other than the stance of policy (for
+example, about lending arrangements or communication) has direction 0.
 
 ### 4.4 Anchor sentences
 
@@ -168,7 +185,7 @@ POLICY
 - +2 "The Committee decided to raise the target range for the policy rate." · "The Committee anticipates that ongoing increases in the target range will be appropriate."
 - +1 "Further increases in the target range may be appropriate." · "Policy accommodation can likely be removed at a gradual pace."
 - 0 "The Committee decided to maintain the target range." · "The Committee will continue to monitor the implications of incoming information."
-- −1 "The Committee will be patient as it determines future adjustments." · "A few participants favored a pause in the reduction of the balance sheet."
+- −1 "The Committee can be patient in beginning to normalize the stance of monetary policy." · "A few participants favored a pause in the reduction of the balance sheet."
 - −2 "The Committee decided to lower the target range." · "Exceptionally low levels of the policy rate are likely to be warranted for an extended period." · "The Committee will increase its holdings of securities."
 
 PROCEDURAL (always 0, topic null)
@@ -184,7 +201,9 @@ A sentence may contain **at most 2 aspects**. Use two aspects only when the sent
 makes two points that differ in **FUNCTION or TOPIC**, for example "Inflation picked
 up, but the unemployment rate rose" → `ASSESSMENT/INFLATION/+1` and
 `ASSESSMENT/LABOR/−1`. If there are more than two points, keep the two most important.
-If one point is minor, use one aspect.
+If one point is minor, use one aspect. A premise or background clause ("Given the
+substantial slack, staff anticipated slight downward pressure on inflation") is not a
+separate aspect: label the sentence's main point.
 
 **Never give two aspects with the same function and topic.** When a sentence contrasts
 points within one function and topic ("household spending grew strongly, while business
