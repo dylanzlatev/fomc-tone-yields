@@ -108,7 +108,8 @@ def make_batches(items: pd.DataFrame, set_name: str, batch_size: int,
     set_dir = batches_root(batches_dir) / set_name
     paths = [set_dir / name for name, _, _ in rendered]
 
-    if set_dir.exists() and any(set_dir.iterdir()):
+    # a committed README.md (e.g. a licence note) is not batch content
+    if set_dir.exists() and any(p.name != "README.md" for p in set_dir.iterdir()):
         mpath = set_dir / MANIFEST
         if not mpath.is_file():
             raise FileExistsError(f"{set_dir} exists and has no manifest; refusing to overwrite")

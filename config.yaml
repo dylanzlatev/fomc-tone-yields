@@ -150,6 +150,17 @@ labelling:
     labelers: [haiku, sonnet, opus-low]
     codebook_versions: [v0, v1, v2]   # codebook used in pilot rounds 1, 2, 3
   codebook_frozen: v2               # git tag codebook-v2
+  gold:
+    statement_weight: 3.0
+    policy_weight: 2.5      # over-sample POLICY-like sentences
+    batch_size: 175
+    labelers: [sonnet, opus-low, opus-med]   # majority vote = gold; haiku scored separately
+  human:
+    seed_offset: 200        # human sheet seed = seed + seed_offset (items drawn from the gold set)
+    floor: 5                # minimum items per doc_types x policy_like stratum
+  tdw:                      # Trillion Dollar Words (gtfintechlab/fomc_communication)
+    set: tdw_test           # labelling batch set name (labels/batches/tdw_test)
+    batch_size: 250
 
 analysis:
   lp_horizons:            # local projections, horizons in trading days
