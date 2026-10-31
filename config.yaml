@@ -150,6 +150,11 @@ labelling:
     labelers: [haiku, sonnet, opus-low]
     codebook_versions: [v0, v1, v2]   # codebook used in pilot rounds 1, 2, 3
   codebook_frozen: v2               # git tag codebook-v2
+  gold:
+    statement_weight: 3.0
+    policy_weight: 2.5      # over-sample POLICY-like sentences
+    batch_size: 175
+    labelers: [sonnet, opus-low, opus-med]   # majority vote = gold; haiku scored separately
 
 analysis:
   lp_horizons:            # local projections, horizons in trading days
