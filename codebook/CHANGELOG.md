@@ -2,6 +2,16 @@
 
 Not shown to labelers (they see only `codebook.md`).
 
+## Frozen: v2 — 2026-10-30 (git tag `codebook-v2`)
+Round 3 (100 fresh items, v2): function κ 0.960, topic κ 0.970, direction all-exact 82%,
+α_interval 0.876, full match 78%; 22 disagreements. Exact direction agreement 80 → 81 →
+82% and function/topic κ ≥ 0.92 in every round: a plateau. The remaining disagreements
+are ±1 strength calls on graded wording ("modest pace", "considerable period") rather
+than rule gaps; Haiku is the odd one out in 13 of 22 and Opus-low in 8, Sonnet in none.
+The direction α dip in round 3 comes from the Haiku pairs (QWK 0.82–0.86 vs 0.95 for
+Opus–Sonnet). Frozen without further changes. Any later change (e.g. after Dylan's
+review) gets a new version and triggers relabelling.
+
 ## v2 — 2026-10-30 (after pilot round 2)
 Round 2 (100 fresh items, v1): function κ 0.922 (93% all-agree), topic κ 0.951,
 direction all-exact 81%, α_interval 0.917, full match 74%; 26 disagreements, most of

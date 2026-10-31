@@ -148,6 +148,8 @@ labelling:
     statement_weight: 4.0   # statements are 4% of unique sentences; up-weight for the pilot
     policy_weight: 2.0      # policy_like() keyword heuristic
     labelers: [haiku, sonnet, opus-low]
+    codebook_versions: [v0, v1, v2]   # codebook used in pilot rounds 1, 2, 3
+  codebook_frozen: v2               # git tag codebook-v2
 
 analysis:
   lp_horizons:            # local projections, horizons in trading days

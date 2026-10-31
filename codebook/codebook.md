@@ -1,6 +1,6 @@
 # Codebook for labelling central-bank policy-committee sentences
 
-**Version v2** (pilot round 3)
+**Version v2** (frozen 2026-10-30)
 
 You will label sentences taken from the written communications of a monetary-policy
 committee: its post-meeting statements and the minutes of its meetings. The
