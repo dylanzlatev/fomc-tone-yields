@@ -73,6 +73,14 @@ factors:
 
 text:
   hf_dataset: vtasca/fomc-statements-minutes
+  # Phase 2 (sentence table; ftyields.text.build)
+  min_fragment_words: 4     # splitter merges sentence fragments shorter than this into a neighbour
+  min_sentence_words: 3     # sentences shorter than this (after cleaning) are dropped
+  uid_hex_len: 12           # uid = 'u' + first N hex chars of sha1(norm)
+  sample_per_type: 30       # random sentences per doc type in tmp/phase2_samples.md
+  extreme_n: 15             # longest / shortest sentences listed in the samples file
+  top_uids: 20              # most frequent uids listed in the samples file
+  masked_examples: 20       # random masked sentences listed in the samples file
 
 # Event alignment rule:
 #   Trading days = dates on which FRED publishes DGS10 (Treasury CMT business days).
