@@ -127,8 +127,8 @@ def count_table(df: pd.DataFrame) -> pd.DataFrame:
     d = df.assign(year=df["release_date"].str[:4])
     def agg(g: pd.DataFrame, dt: str, yr: str) -> dict[str, Any]:
         return {"doc_type": dt, "year": yr, "documents": g["doc_id"].nunique(), "sentences": len(g),
-                "unique_uids": g["uid"].nunique(), "words_median": float(g["n_words"].median()),
-                "words_p95": float(np.percentile(g["n_words"], 95))}
+                "unique_uids": g["uid"].nunique(), "words_median": round(float(g["n_words"].median()), 1),
+                "words_p95": round(float(np.percentile(g["n_words"], 95)), 1)}
     rows = []
     for dt in ["statement", "minutes"]:
         sub = d[d["doc_type"] == dt]
