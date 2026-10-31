@@ -1,0 +1,2 @@
+n_items,n_labelers,function_fleiss_kappa,function_all_agree_pct,topic_n_items,topic_all_agree_pct,topic_fleiss_kappa,direction_all_exact_pct,direction_alpha_interval,direction_subst_alpha_interval,full_match_all_pct,n_items_labelled_by_any
+100,3,0.9601209664019142,96.0,60,96.66666666666667,0.9698315595407694,82.0,0.8757309103416647,0.8745507786503395,78.0,100
