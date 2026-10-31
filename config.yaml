@@ -46,6 +46,14 @@ fred:
     DGS10: 10Y
     DGS20: 20Y
     DGS30: 30Y
+  # Series breaks: any change y(t) - y(s) whose interval (s, t] contains one of these
+  # dates is set to NaN for the listed columns (and the factors built from them).
+  # 2002-02-19 .. 2006-02-08 the 30Y bond was suspended and DGS30 is Treasury's
+  # extrapolated 30-year rate (different construction; +17bp / -16bp jumps at the
+  # edges while the 20Y moved +3 / -3). Robustness: GSW curve, or drop the window.
+  series_breaks:
+    y_30y: [2002-02-19, 2006-02-09]
+  suspended_30y_window: [2002-02-19, 2006-02-08]
 
 # Yield-curve factors, all in basis points (yields x 100).
 factors:
@@ -96,6 +104,8 @@ sources:
   bauer_swanson_xlsx: https://www.frbsf.org/wp-content/uploads/monetary-policy-surprises-data.xlsx
   bauer_swanson_sheet: FOMC (update 2023)
   usmpd_xlsx: https://www.frbsf.org/wp-content/uploads/USMPD.xlsx
+  usmpd_zip: https://www.frbsf.org/wp-content/uploads/monetary-policy-surprises.zip
+  jk_readme: https://raw.githubusercontent.com/marekjarocinski/jkshocks_update_fed/main/README.md
   jk_csv: https://raw.githubusercontent.com/marekjarocinski/jkshocks_update_fed/main/shocks_fed_jk_t.csv
   tdw_hf_dataset: gtfintechlab/fomc_communication
   fed_calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm

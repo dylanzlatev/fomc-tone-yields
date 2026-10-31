@@ -4,6 +4,7 @@ channels:
 dependencies:
   - python=3.11
   - numpy>=1.26
+  - libblas=*=*openblas   # MKL delay-loads DLLs that fail unless Library/bin is on PATH (crash 0xc06d007f)
   - pandas>=2.1
   - scipy>=1.11
   - scikit-learn>=1.3
