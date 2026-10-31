@@ -2,6 +2,23 @@
 
 Not shown to labelers (they see only `codebook.md`).
 
+## v1 — 2026-10-30 (after pilot round 1)
+Round 1 (100 items; Haiku, Sonnet, Opus-low): function Fleiss κ 0.976, topic κ 0.932,
+direction all-exact 80%, Krippendorff α (interval) 0.914; 23 items with any primary-label
+disagreement. Changes, each targeting an observed disagreement pattern:
+- **No two aspects with the same function and topic**; same-topic contrasts get one
+  aspect with the net direction (main clause dominates a concession). 8 of 23 cases were
+  one labeler splitting "X grew strongly, while Y moderated" into +2 and −1.
+- **Topic choice rules**: activity/growth/recovery/expansion → ACTIVITY; slack/resource
+  utilization → LABOR; inflation compensation from inflation-indexed securities →
+  INFLATION; GENERAL only for risk balance, uncertainty, both goals together.
+- **Implementation/operations** (repo operations, reserve management, money-market
+  functioning, balance-sheet mechanics/framework) → POLICY 0; staff/manager operational
+  recommendations → PROCEDURAL; generic monitoring/attentiveness/"as appropriate" → POLICY 0.
+- **Directional readiness** ("prepared to provide additional accommodation") → ±1;
+  **neutral-rate views** (lower → dovish); **outcomes at/near goals** → 0.
+- **Risk-statement strength**: tilted/weighted/increased → ±1; significant/substantial → ±2.
+
 ## v0 — 2026-10-30 (draft for pilot round 1)
 Written by the orchestrator from the HANDOFF section 3 specification.
 

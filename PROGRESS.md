@@ -195,6 +195,24 @@ Sonnet subagent in a worktree; reviewed by me, sent back once (short-sentence ru
 
 </details>
 
+### 2026-10-30 — Phase 3 (codebook) — in progress
+- **Pilot protocol:** each round = 100 fresh stratified unique sentences
+  (`python -m ftyields.label.pilot --round k`; statements ×4, policy-like ×2 weight;
+  excludes earlier rounds and flagged procedural blocks), 3 blind labelers (Explore
+  agents: Haiku, Sonnet, Opus at low effort) with identical prompts except the output
+  path; validate → `python -m ftyields.label agree` → I read every disagreement →
+  revise. Tables in `labels/pilot/rK_agreement/`.
+- **Write path:** Explore agents can't reliably use Bash heredocs here (quoting error);
+  PowerShell `[IO.File]::WriteAllText(path, @'…'@)` works. In round 1 Haiku refused to
+  write and returned its labels as text; I saved them verbatim (Write tool) — the
+  validator passed. From the next session use the `fomc-labeler` agent (Write tool).
+- **Round 1 (codebook v0):** function Fleiss κ 0.976 (98% all-agree), topic κ 0.932,
+  direction all-exact 80%, α_interval 0.914 (0.917 excluding PROCEDURAL), full match 77%;
+  pairwise direction within ±1: 98–100%. 23 disagreements, read individually; patterns
+  and the resulting v1 rules are in `codebook/CHANGELOG.md`.
+- Phase-2 bug found via the pilot: the splitter treats "E&S." as an abbreviation, so one
+  unique item holds two sentences. To fix in a phase-2 follow-up (low impact).
+
 ## For Dylan
 - (nothing yet)
 

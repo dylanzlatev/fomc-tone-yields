@@ -1,6 +1,6 @@
 # Codebook for labelling central-bank policy-committee sentences
 
-**Version v0** (draft for pilot round 1)
+**Version v1** (pilot round 2)
 
 You will label sentences taken from the written communications of a monetary-policy
 committee: its post-meeting statements and the minutes of its meetings. The
@@ -48,7 +48,17 @@ Rules for choosing:
 - A sentence stating the committee's long-run goals or strategy in general terms, with
   no view on current conditions or the current direction of policy, is PROCEDURAL.
 - A sentence that only describes how policy will be decided ("will take into account a
-  wide range of information") is POLICY with direction 0.
+  wide range of information", "will continue to monitor incoming information", "is
+  attentive to the risks to both sides of its dual mandate", "will adjust policy as
+  appropriate", "is prepared to use its tools as appropriate") is POLICY with direction 0.
+- **Implementation and operations** — operations to keep the policy rate in its target
+  range, to keep reserves ample, to support the smooth functioning of money markets, the
+  mechanics, framework or communication plan of balance-sheet operations, reinvestment
+  mechanics — are POLICY with direction 0, unless the sentence says the action adds or
+  removes policy accommodation or changes the size of securities holdings to ease or
+  tighten.
+- Recommendations, preferences or reports by staff or by the operations manager about
+  operational details (collateral, counterparties, technical authorities) are PROCEDURAL.
 - Section headings, footnote markers and fragments with no content are PROCEDURAL.
 
 ---
@@ -62,6 +72,15 @@ Rules for choosing:
 | `ACTIVITY` | Output and growth, consumer spending, business investment, housing and house prices, industrial production, inventories, government spending, exports, imports and the trade balance, sentiment and confidence of households and businesses. |
 | `FINANCIAL` | Financial conditions: asset prices, interest rates on loans and securities, credit availability and credit spreads, bank lending and bank health, funding strains, financial stability, the exchange value of the dollar, financial spillovers from abroad. |
 | `GENERAL` | The economy as a whole or both goals at once, with no single area dominant: "the economic outlook", "the balance of risks", "overall uncertainty", "the expansion". |
+
+Choosing between topics:
+- "Economic activity", "economic growth", "the recovery", "the expansion", "output",
+  "demand" → **ACTIVITY**, even when the sentence is about the economy broadly.
+- "Slack", "resource utilization", "the labor market" → **LABOR**.
+- Measures of inflation expectations or inflation compensation, including those derived
+  from inflation-indexed securities → **INFLATION**.
+- **GENERAL** only for the balance of risks, uncertainty about the outlook, or the two
+  goals considered together ("risks to the outlook", "both sides of its mandate").
 
 If a sentence is about a foreign economy, use the topic it is about (usually ACTIVITY
 or FINANCIAL) and judge direction by what it implies for the home economy: weaker
@@ -93,6 +112,14 @@ earlier statements or guess how it differs from what was said before.
   policy, with no statement about financial conditions or the economy → FINANCIAL with
   direction 0.
 - Holding the policy rate unchanged, with no guidance about future moves → POLICY 0.
+- Readiness to act **in a stated direction** counts ("prepared to provide additional
+  accommodation if needed" → −1; "prepared to adjust policy to address inflation
+  pressures" → +1, as conditional statements they are hedged); readiness with no
+  direction ("as appropriate") → 0.
+- Views on the **neutral or longer-run level of the policy rate**: a lower estimate →
+  dovish, a higher estimate → hawkish (POLICY).
+- Outcomes described as **at or near the goals** (inflation near 2 percent, maximum
+  employment, sustained growth) → 0.
 - PROCEDURAL is always 0.
 
 ### 4.2 Strength
@@ -102,6 +129,10 @@ earlier statements or guess how it differs from what was said before.
 | ±2 | Clear, strong or emphasized signal; a definite committee decision or commitment to move | "sharply", "substantially", "significantly", "elevated", "strong", "severe", "deteriorated", "decided to raise/lower", "anticipates that further increases will be appropriate" |
 | ±1 | Mild, moderate or partial signal | "somewhat", "modestly", "slightly", "edged up", "solid", "gradual", "low", "picked up" |
 | 0 | Unchanged, stable, balanced, mixed in the same aspect, or no implication for the rate | "remained stable", "moderate pace", "roughly balanced", "little changed" |
+
+Risk statements: risks "tilted", "weighted" or "skewed" toward one side, or risks that
+have "increased" or "diminished" → ±1; risks described as "significant", "substantial",
+"considerable" or "sharply increased" → ±2.
 
 ### 4.3 Hedges and minority views
 Lower the strength by one, **but never below 1** (keep the sign), when the sentence is:
@@ -150,13 +181,18 @@ PROCEDURAL (always 0, topic null)
 ## 5. Mixed sentences
 
 A sentence may contain **at most 2 aspects**. Use two aspects only when the sentence
-makes two distinct points that differ in FUNCTION, TOPIC or DIRECTION, for example
-"Inflation picked up, but the unemployment rate rose" →
-`ASSESSMENT/INFLATION/+1` and `ASSESSMENT/LABOR/−1`. If there are more than two
-points, keep the two most important. If one point is minor, use one aspect.
+makes two points that differ in **FUNCTION or TOPIC**, for example "Inflation picked
+up, but the unemployment rate rose" → `ASSESSMENT/INFLATION/+1` and
+`ASSESSMENT/LABOR/−1`. If there are more than two points, keep the two most important.
+If one point is minor, use one aspect.
 
-Within a single aspect, if the sentence says the evidence is mixed ("some indicators
-improved while others weakened"), use direction 0.
+**Never give two aspects with the same function and topic.** When a sentence contrasts
+points within one function and topic ("household spending grew strongly, while business
+investment moderated"; "although activity will remain weak for a time, growth is
+expected to resume gradually"), give **one** aspect with the **net** direction:
+- the points roughly offset, or the sentence calls the evidence mixed → 0;
+- one point clearly dominates → its sign, strength 1. In "Although A, B" sentences the
+  main clause B usually dominates the concession A, unless A is clearly stronger.
 
 ---
 
