@@ -4,23 +4,31 @@ Running log kept by the orchestrator session. Read this at the start of every se
 (see CLAUDE.md). Newest entries at the top of each section.
 
 ## Current state
-- **Phase:** 4 (validation sets) in progress on `phase-4-validation`. Phases 0–3 merged
-  (PRs #1–#7); codebook v2 frozen (tag `codebook-v2`).
-- **Running / just launched (session 1):** gold set (350 items, 2 batches of 175) being
-  labelled by 3 blind Explore labelers → `labels/out/gold/{sonnet,opus-low,opus-med}/`;
-  Sonnet subagent on `phase-4-validation-tools` building Dylan's 100-sentence sheet
-  (`labels/human/`), the TDW loader and `ftyields.label.validation` tables.
+- **Phase:** 5 (scoring) in progress. Phases 0–4 merged (PRs #1–#8); 5a (RoBERTa scores)
+  merged (#9); training set (10k, 34 batches) and distiller code merged with this
+  progress update. Real training needs the production labels (steps 1–3 below).
 - **Next session — start here:**
-  1. Restart loads `.claude/agents/fomc-labeler.md` (Read/Write, no CLAUDE.md). Verify
-     with a canary prompt that it sees no CLAUDE.md; then use it for all labelling.
-  2. Label the gold set with **Haiku** via `fomc-labeler` (`labels/out/gold/haiku/`),
-     then run `python -m ftyields.label.validation` → production-labeler choice
-     (cheapest within ~5 points of the best vs the leave-out consensus).
-  3. Phase 5: RoBERTa sentence scoring on GPU; ~10k stratified training labels with the
-     chosen labeler (batches of 300, resumable via `python -m ftyields.label pending`);
-     distillation.
-- **Interrupted batch jobs:** none yet (check `labels/out/gold/*/` — each labeler must
-  have batch_0001 and batch_0002; re-run any missing batch with the same prompt).
+  1. The restart loads `.claude/agents/fomc-labeler.md` (Read/Write only, `omitClaudeMd:
+     true`). Verify with a canary prompt (ask it to quote any CLAUDE.md lines / mention of
+     yields in its context) before using it for labelling.
+  2. Label the gold set with **Haiku** via `fomc-labeler`: prompt = codebook path +
+     `labels/batches/gold/batch_000{1,2}.jsonl` + output
+     `labels/out/gold/haiku/batch_000{1,2}.jsonl`. Then
+     `python -m ftyields.label.validation`; choose the production labeler (cheapest within
+     ~5 points of the best on full match / direction exact vs the leave-out consensus;
+     Opus leave-out numbers are inflated by the same-model pair — weigh Sonnet vs Haiku
+     on the Opus-pair consensus). Log the decision.
+  3. Production labels: `labels/batches/train/` (≈34 batches × 300) with the chosen labeler
+     → `labels/out/train/<labeler>/`. Resumable: `python -m ftyields.label pending --set
+     train --labeler <labeler>`; validate each with `python -m ftyields.label validate`.
+     Pace for rate limits (e.g. 4–6 parallel agents per wave) and record the last
+     completed batch here if a limit hits.
+  4. Claude-direct on TDW: label `labels/batches/tdw_test/` (479 sentences, gitignored,
+     regenerate with `python -m ftyields.label.tdw`) with the production labeler.
+  5. Train the distiller (`python -m ftyields.model.distill`; stages `--stages train`,
+     then `--stages eval infer`), evaluate year-held-out and vs gold, refit on all labels,
+     apply to the corpus. Then phase 6 (measurement tables) and phase 7 (indices).
+- **Interrupted batch jobs:** none.
 
 ## Phase status
 
@@ -30,8 +38,8 @@ Running log kept by the orchestrator session. Read this at the start of every se
 | 1 | Data | done | yes | #2, #3, #4 |
 | 2 | Text | done | yes | #6 |
 | 3 | Codebook | done (v2 frozen) | yes | #5, #7 |
-| 4 | Validation sets | done (human pending) | yes | (phase PR) |
-| 5 | Scoring | not started | | |
+| 4 | Validation sets | done (human pending) | yes | #8 |
+| 5 | Scoring | in progress (5a done) | | #9 |
 | 6 | Measurement results | not started | | |
 | 7 | Indices | not started | | |
 | 8 | Main analysis | not started | | |
@@ -266,6 +274,43 @@ Sonnet subagent in a worktree; reviewed by me, sent back once (short-sentence ru
   Final choice after (i) Haiku's gold labels and (ii) Dylan's 100 as an independent
   reference; default meanwhile: Sonnet, with Opus-low if Sonnet trails by > 5 points on
   the human reference.
+
+### 2026-10-30 — Phase 5a (RoBERTa sentence scores) — done (PR #9)
+- `python -m ftyields.model.score` (= `run_all.py --only score`): FOMC-RoBERTa on the raw
+  text of all 51,006 sentence occurrences (42,289 unique raw texts); score =
+  P(hawk) − P(dov), label map in config (LABEL_0 dovish, 1 hawkish, 2 neutral).
+  → `data/processed/roberta_sentence_scores.parquet`. 19 occurrences truncated at 256 tokens.
+- **Precision decision:** fp16 passed a 200-sentence check (max diff 0.0091) but on the
+  full corpus it moved scores by up to 0.23 and flipped 12 labels vs fp32; even fp32 at
+  batch 64 varied ~2e-4 with batch composition. Final: **fp32, batch size 1** (every score
+  independent of batch composition; bit-identical reruns; ~10 min on the 2070S).
+- **Probe table** `results/tables/sentence_probe.{csv,tex}` (FinBERT caution note)
+  reproduces the handoff's 8 sentences exactly (RoBERTa +0.99, +0.99, −0.97, −0.15,
+  +1.00, +1.00, 0.00, +0.65; FinBERT positive/negative/…).
+- Label shares: minutes 24% dovish / 23% hawkish / 53% neutral; statements 36 / 25 / 39.
+  Spot check: "Inflation remains elevated." scores 0.999 across its 12 occurrences.
+
+### 2026-10-30 — Phase 5b (training set + distiller code) — built, awaiting labels
+- **Training set** (`python -m ftyields.label.train_set`): 10,000 unique sentences in 34
+  batches of 300 (`labels/batches/train/`): **all 1,453 remaining statement sentences** +
+  8,547 stratified minutes-only sentences; excludes pilot, gold and procedural-only uids.
+  Eras 2000–07: 2,154 · 2008–15: 3,507 · 2016–25: 4,339.
+- **Distiller** (`python -m ftyields.model.distill`): 11 slots = ASSESSMENT×5 topics,
+  OUTLOOK×5, POLICY; per slot a presence head + 5-class direction head (captures
+  two-aspect sentences; PROCEDURAL = no slot). Outputs per uid: predicted label (≤ 2
+  aspects), slot presence probabilities and expected direction E[d] (continuous, for the
+  indices). Splits by **year** (test 2003/2009/2014/2019/2023, val 2006/2017); a random
+  split is also reported, flagged optimistic. Inference fp32, batch size 1. Default
+  encoder FOMC-RoBERTa-large, batch 4 × accum 8, AMP for training (peak 6.9 GiB
+  worst case); `--set grad_checkpointing=true` if OOM. Smoke test on 650 labels: trains,
+  loss falls, outputs valid. I read the year-split code.
+- **Decisions for the real run:** (i) after reporting the year-held-out metrics, refit on
+  all labelled data with the selected epochs for the corpus application (the held-out
+  metric estimates its quality); (ii) compare FOMC-RoBERTa-large vs roberta-base and pick
+  on year-held-out full match; (iii) check per-slot F1 before trusting the 0.5 presence
+  threshold (sparse slots may need a lower one, chosen on val only).
+- Known quirk (harmless, left for reproducibility): `sample.section_group` splits on ";"
+  but `sections` uses "|", so multi-section sentences form their own strata.
 
 ## For Dylan
 - **Codebook ready to review** — `codebook/codebook.md` (v2, frozen, tag `codebook-v2`) with

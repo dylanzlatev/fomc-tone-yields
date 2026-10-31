@@ -183,9 +183,46 @@ labelling:
   human:
     seed_offset: 200        # human sheet seed = seed + seed_offset (items drawn from the gold set)
     floor: 5                # minimum items per doc_types x policy_like stratum
+  train:                    # distillation training set (ftyields.label.train_set)
+    seed_offset: 300        # draw seed = seed + seed_offset
+    floor: 5                # minimum minutes-only items per doc type x section x era stratum
+    labeler: sonnet         # labeler whose labels/out/train/<labeler>/ outputs train the distiller
   tdw:                      # Trillion Dollar Words (gtfintechlab/fomc_communication)
     set: tdw_test           # labelling batch set name (labels/batches/tdw_test)
     batch_size: 250
+
+# Distillation: LLM labels -> local fine-tuned classifier applied to the whole corpus
+# (ftyields.model.distill). Slots = {ASSESSMENT, OUTLOOK} x {INFLATION, LABOR, ACTIVITY,
+# FINANCIAL, GENERAL} + POLICY; per slot a presence logit and 5 direction logits (-2..2).
+distill:
+  encoder: gtfintechlab/FOMC-RoBERTa   # or roberta-base
+  max_length: 256                      # prev_text </s></s> text, tokens (truncation is reported)
+  lambda_dir: 1.0                      # loss = mean BCE(presence) + lambda * masked CE(direction)
+  lr: 2.0e-5
+  weight_decay: 0.01
+  warmup_frac: 0.1
+  epochs: 6
+  patience: 2                          # early stopping: epochs without validation improvement
+  batch_size: 4                        # per step; effective batch = batch_size * grad_accum (worst case 4x256 tokens peaks at 6.9 GiB for RoBERTa-large)
+  grad_accum: 8
+  freeze_embeddings: false             # saves ~0.6 GiB if memory is tight
+  grad_checkpointing: false            # saves ~1 GiB at batch 8 (about 30% slower)
+  amp: true                            # fp16 autocast for TRAINING only; inference is fp32
+  test_years: [2003, 2009, 2014, 2019, 2023]
+  val_years: [2006, 2017]
+  random_split: {train: 0.8, val: 0.1, test: 0.1}   # optimistic comparison split (seed + 301)
+  threshold: 0.5                       # presence probability threshold for the predicted label
+  infer_batch_size: 1                  # fp32, one sentence at a time => independent of batch composition
+  batch_check_n: 500                   # sentences rescored in other batches / reruns for the checks
+  batch_check_tol: 1.0e-5
+  model_dir: models/distill            # weights (gitignored)
+  out: data/processed/distilled_labels.parquet
+  max_commit_mb: 20
+  fallback_out: data/interim/distilled_labels.parquet
+  tables: results/tables
+  smoke_encoder: roberta-base          # --smoke: falls back to FOMC-RoBERTa if unavailable
+  smoke_epochs: 2
+  smoke_infer_n: 200
 
 analysis:
   lp_horizons:            # local projections, horizons in trading days
