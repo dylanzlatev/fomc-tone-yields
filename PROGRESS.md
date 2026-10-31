@@ -5,8 +5,8 @@ Running log kept by the orchestrator session. Read this at the start of every se
 
 ## Current state
 - **Phase:** 5 (scoring) in progress. Phases 0–4 merged (PRs #1–#8); 5a (RoBERTa scores)
-  merged (#9). Distiller + training-set sampler being built on `phase-5-distill`
-  (smoke-tested on the 650 existing labels; real training needs the production labels).
+  merged (#9); training set (10k, 34 batches) and distiller code merged with this
+  progress update. Real training needs the production labels (steps 1–3 below).
 - **Next session — start here:**
   1. The restart loads `.claude/agents/fomc-labeler.md` (Read/Write only, `omitClaudeMd:
      true`). Verify with a canary prompt (ask it to quote any CLAUDE.md lines / mention of
@@ -25,8 +25,9 @@ Running log kept by the orchestrator session. Read this at the start of every se
      completed batch here if a limit hits.
   4. Claude-direct on TDW: label `labels/batches/tdw_test/` (479 sentences, gitignored,
      regenerate with `python -m ftyields.label.tdw`) with the production labeler.
-  5. Train the distiller (`python -m ftyields.model.distill`, see phase-5-distill notes),
-     evaluate year-held-out and vs gold, apply to the corpus.
+  5. Train the distiller (`python -m ftyields.model.distill`; stages `--stages train`,
+     then `--stages eval infer`), evaluate year-held-out and vs gold, refit on all labels,
+     apply to the corpus. Then phase 6 (measurement tables) and phase 7 (indices).
 - **Interrupted batch jobs:** none.
 
 ## Phase status
@@ -288,6 +289,28 @@ Sonnet subagent in a worktree; reviewed by me, sent back once (short-sentence ru
   +1.00, +1.00, 0.00, +0.65; FinBERT positive/negative/…).
 - Label shares: minutes 24% dovish / 23% hawkish / 53% neutral; statements 36 / 25 / 39.
   Spot check: "Inflation remains elevated." scores 0.999 across its 12 occurrences.
+
+### 2026-10-30 — Phase 5b (training set + distiller code) — built, awaiting labels
+- **Training set** (`python -m ftyields.label.train_set`): 10,000 unique sentences in 34
+  batches of 300 (`labels/batches/train/`): **all 1,453 remaining statement sentences** +
+  8,547 stratified minutes-only sentences; excludes pilot, gold and procedural-only uids.
+  Eras 2000–07: 2,154 · 2008–15: 3,507 · 2016–25: 4,339.
+- **Distiller** (`python -m ftyields.model.distill`): 11 slots = ASSESSMENT×5 topics,
+  OUTLOOK×5, POLICY; per slot a presence head + 5-class direction head (captures
+  two-aspect sentences; PROCEDURAL = no slot). Outputs per uid: predicted label (≤ 2
+  aspects), slot presence probabilities and expected direction E[d] (continuous, for the
+  indices). Splits by **year** (test 2003/2009/2014/2019/2023, val 2006/2017); a random
+  split is also reported, flagged optimistic. Inference fp32, batch size 1. Default
+  encoder FOMC-RoBERTa-large, batch 4 × accum 8, AMP for training (peak 6.9 GiB
+  worst case); `--set grad_checkpointing=true` if OOM. Smoke test on 650 labels: trains,
+  loss falls, outputs valid. I read the year-split code.
+- **Decisions for the real run:** (i) after reporting the year-held-out metrics, refit on
+  all labelled data with the selected epochs for the corpus application (the held-out
+  metric estimates its quality); (ii) compare FOMC-RoBERTa-large vs roberta-base and pick
+  on year-held-out full match; (iii) check per-slot F1 before trusting the 0.5 presence
+  threshold (sparse slots may need a lower one, chosen on val only).
+- Known quirk (harmless, left for reproducibility): `sample.section_group` splits on ";"
+  but `sections` uses "|", so multi-section sentences form their own strata.
 
 ## For Dylan
 - **Codebook ready to review** — `codebook/codebook.md` (v2, frozen, tag `codebook-v2`) with
