@@ -27,7 +27,7 @@ SENT_COLS = ["sent_id", "doc_id", "doc_type", "event_id", "release_date", "sent_
 
 
 def _tcfg(cfg: dict[str, Any]) -> dict[str, Any]:
-    d = {"min_fragment_words": 4, "min_sentence_words": 3, "uid_hex_len": 12, "sample_per_type": 30,
+    d = {"min_fragment_words": 4, "min_sentence_words": 2, "uid_hex_len": 12, "sample_per_type": 30,
          "extreme_n": 15, "top_uids": 20, "masked_examples": 20}
     d.update({k: v for k, v in (cfg.get("text") or {}).items() if k in d})
     return d
@@ -52,7 +52,7 @@ def load_inputs(cfg: dict[str, Any]) -> pd.DataFrame:
 
 
 def document_sentences(cd: C.CleanDoc, doc_type: str, min_fragment_words: int = 4,
-                       min_sentence_words: int = 3) -> list[dict[str, Any]]:
+                       min_sentence_words: int = 2) -> list[dict[str, Any]]:
     """Sentences (text, section, is_procedural) of one cleaned document, in order."""
     out: list[dict[str, Any]] = []
     tagger = SectionTagger(has_headings=doc_has_headings([b.text for b in cd.blocks if b.kind == "heading"]))

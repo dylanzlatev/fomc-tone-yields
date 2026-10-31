@@ -109,14 +109,42 @@ def split_sentences(paragraph: str, min_words: int = 4) -> list[str]:
     return _merge_short(parts, min_words)
 
 
+_TERMINAL_END = re.compile(r"[.?!][\"'”’)\]]*$")
+_ENUM_ONLY = re.compile(r"^(?:\(?[A-Za-z0-9]{1,3}[.)]|(?:[A-Z]\.\s*)+|[0-9][0-9.,]*)$")
+
+
+def is_artifact(piece: str, min_words: int) -> bool:
+    """Is a short piece a splitter artifact (as opposed to a genuine short sentence)?
+
+    Artifact = fewer than `min_words` words AND one of: (a) no terminal punctuation,
+    (b) starts with a lowercase letter, (c) a single token / pure number / enumerator /
+    initials only ('S.', '1.', '(a)'). A complete uppercase-initial sentence with >= 2 words
+    ending in . ? ! is never an artifact ('Inflation remained elevated.', 'Employment rose.').
+    """
+    p = piece.strip()
+    if _n_words(p) >= min_words:
+        return False
+    if not _TERMINAL_END.search(p):
+        return True
+    if p[:1].islower():
+        return True
+    if _n_words(p) < 2 or _ENUM_ONLY.match(p):
+        return True
+    return False
+
+
 def _merge_short(parts: list[str], min_words: int) -> list[str]:
+    """Merge splitter artifacts into a neighbour (next piece; previous for lowercase starts / the last piece)."""
     if len(parts) <= 1:
         return parts
     out: list[str] = []
     carry = ""
     for p in parts:
+        if not carry and is_artifact(p, min_words) and p[:1].islower() and out:
+            out[-1] = out[-1] + " " + p
+            continue
         cur = (carry + " " + p).strip() if carry else p
-        if _n_words(cur) < min_words:
+        if not carry and is_artifact(cur, min_words):
             carry = cur
             continue
         out.append(cur)

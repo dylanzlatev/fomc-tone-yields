@@ -507,6 +507,9 @@ _DROP_PATTERNS = [
     re.compile(r"^Minutes of the Federal Open Market Committee\b", re.I),
     re.compile(r"^(?:Return to (?:top|text)|Last update)\b", re.I),
     re.compile(r"^Secretary$", re.I),
+    re.compile(r"^Secretary['’]s notes?:?$", re.I),
+    re.compile(r"^\*\s*The (?:HTML|PDF) version\b", re.I),
+    re.compile(r"^[a-z][^.]{0,40}\.$"),        # orphan lowercase fragment ('has been corrected.')
     re.compile(r"^.{0,60}\bwas held in the offices of the Board\b", re.I),
     re.compile(r"^[_\s]*\d{1,2}\s*[/.]?\s+Attended\b", re.I),
     re.compile(r"^Attended\b(?!.*\bthe Committee voted)", re.I),

@@ -6,7 +6,7 @@ from ftyields.text import clean as C
 from ftyields.text.build import (build_unique, count_table, counts_tex, document_sentences)
 from ftyields.text.mask import Masker, make_uid, normalize
 from ftyields.text.sections import SectionTagger, classify_heading
-from ftyields.text.split import split_sentences
+from ftyields.text.split import is_artifact, split_sentences
 
 
 # ---------------------------------------------------------------- splitter
@@ -279,3 +279,46 @@ def test_prev_text_stays_within_document():
     d0 = df[df.doc_id == "S20100101"].sort_values("sent_idx")
     assert d0.iloc[0]["prev_text"] == ""
     assert list(d0["sent_id"]) == ["S20100101_0000", "S20100101_0001"]
+
+
+# ---------------------------------------------------------------- short sentences vs splitter artifacts
+
+def test_short_complete_sentences_survive_with_neighbours():
+    t = ("Job gains have moderated since early last year but remain strong. Inflation remained elevated. "
+         "The Committee decided to maintain the target range for the federal funds rate. Employment rose. "
+         "Household spending continued to expand at a solid pace in recent months.")
+    s = split_sentences(t, min_words=4)
+    assert s == [
+        "Job gains have moderated since early last year but remain strong.",
+        "Inflation remained elevated.",
+        "The Committee decided to maintain the target range for the federal funds rate.",
+        "Employment rose.",
+        "Household spending continued to expand at a solid pace in recent months.",
+    ]
+    # first / last position too
+    assert split_sentences("Employment rose. Spending was strong across most categories of goods and services.") == [
+        "Employment rose.", "Spending was strong across most categories of goods and services."]
+    assert split_sentences("Spending was strong across most categories of goods and services. Inflation remained elevated.") == [
+        "Spending was strong across most categories of goods and services.", "Inflation remained elevated."]
+
+
+def test_short_sentences_survive_document_pipeline():
+    raw = ("Information received since the Committee met suggests that activity is expanding. Inflation remained elevated. "
+           "The Committee decided to keep the target range unchanged at this meeting. Employment rose.")
+    cd = C.clean_document(raw, "statement")
+    texts = [s["text"] for s in document_sentences(cd, "statement", 4, 2)]
+    assert "Inflation remained elevated." in texts and "Employment rose." in texts and len(texts) == 4
+
+
+def test_genuine_artifacts_still_merge():
+    assert is_artifact("S.", 4) and is_artifact("1.", 4) and is_artifact("(a)", 4) and is_artifact("Yes", 4)
+    assert is_artifact("and so on.", 4)                     # lowercase start
+    assert is_artifact("Core inflation remained", 4)       # no terminal punctuation
+    assert not is_artifact("Employment rose.", 4) and not is_artifact("Inflation remained elevated.", 4)
+    assert not is_artifact("Core inflation remained contained and stable.", 4)
+    s = split_sentences("The vote was taken by Messrs. Hoenig. 2. The Committee then adjourned for lunch at noon.")
+    assert len(s) <= 2 and all(len(x.split()) >= 2 for x in s)
+    assert split_sentences("Yes. The Committee decided to keep the target range unchanged at this meeting.") == [
+        "Yes. The Committee decided to keep the target range unchanged at this meeting."]
+    assert split_sentences("The Committee decided to keep the target range unchanged at this meeting. Done") == [
+        "The Committee decided to keep the target range unchanged at this meeting. Done"]
