@@ -13,9 +13,9 @@ Running log kept by the orchestrator session. Read this at the start of every se
 | # | Phase | Status | Verified | PR |
 |---|---|---|---|---|
 | 0 | Setup | done | yes | #1 |
-| 1 | Data | done | yes | #2, #3, (phase PR) |
-| 2 | Text | not started | | |
-| 3 | Codebook | not started | | |
+| 1 | Data | done | yes | #2, #3, #4 |
+| 2 | Text | done | yes | #6 |
+| 3 | Codebook | in progress (tooling #5) | | |
 | 4 | Validation sets | not started | | |
 | 5 | Scoring | not started | | |
 | 6 | Measurement results | not started | | |
@@ -97,6 +97,103 @@ fomc_events, calendar_reconciliation, event_days}.csv`, `results/tables/coverage
   statement days vs 5.3 minutes days vs 5.5 all days; corr(d2Y, MPS) = 0.52 on scheduled
   statement days (n=191); largest |d2Y| days 2008-01-22 (−28), 2008-03-11 (+27),
   2023-12-13 (−27). 108 tests pass. No surprise values in committed files.
+
+### 2026-10-30 — Phase 2 (text) — done (PR #6)
+Sonnet subagent in a worktree; reviewed by me, sent back once (short-sentence rule).
+`data/processed/sentences.parquet` (one row per sentence occurrence) and
+`sentences_unique.parquet` (de-duplicated on masked, normalised text);
+`results/tables/sentence_counts.{csv,tex}`; `run_all.py --only text`.
+- **Counts:** 428 documents (220 statements, 208 minutes); **51,006 sentences, 41,974
+  unique** (statements 3,007 → 1,558 unique; minutes 47,999 → 41,334 unique). 2,356
+  minutes sentences flagged `is_procedural` (annual organisational/authorisation blocks);
+  41,177 unique uids outside them. Median words/sentence 23 (statements), 26 (minutes).
+- **Cleaning:** headers, attendance blocks, vote tallies, footnotes, web boilerplate,
+  adjournment/next-meeting lines removed; dissent explanations, directive text and goals
+  statements kept; mojibake repaired (36 sentences keep an unrecoverable `[FRAC]`).
+- **Masking:** names (772-name gazetteer from attendance/vote lists + title/honorific
+  patterns) → `[NAME]`, dates → `[DATE]`, years 1990–2029 → `[YEAR]`; numbers untouched.
+  Known residual era cues not masked: bare month names, named institutions and episodes
+  ("the pandemic", "Silicon Valley Bank", "the invasion of Ukraine"). The codebook forbids
+  outside-knowledge reasoning; the paper will state this limitation.
+- **Sections (minutes):** financial_markets, staff_economic, staff_financial,
+  staff_outlook, participants_views, policy_action, other — headings from 2009, opening
+  triggers before that.
+- **Verified myself:** read a whole statement (S20220316) in order, the opening of
+  M20220316 (no header/attendance residue), dissent sentences; the "�" I saw in a 2022
+  sentence was a console rendering of a real em dash (U+2014). Fix I required: the
+  fragment rule had merged complete short sentences ("Inflation remained elevated.");
+  now only splitter artefacts merge (18 sentences of 2–3 words remain, all legitimate).
+  Byte-identical reruns; 171 tests pass on main.
+
+<details><summary>30 random statement sentences (masked text as labelers see it; seed 20261030)</summary>
+
+- `S20030625_0006` [statement] The Committee perceives that the upside and downside risks to the attainment of sustainable growth for the next few quarters are roughly equal.
+- `S20030916_0002` [statement] The evidence accumulated over the intermeeting period confirms that spending is firming, although the labor market has been weakening.
+- `S20090624_0005` [statement] The prices of energy and other commodities have risen of late.
+- `S20101214_0012` [statement] The Committee will regularly review the pace of its securities purchases and the overall size of the asset-purchase program in light of incoming information and will adjust the program as needed to best foster maximum employment and price stability.
+- `S20110809_0015` [statement] The Committee also will maintain its existing policy of reinvesting principal payments from its securities holdings.
+- `S20120313_0007` [statement] The Committee expects moderate economic growth over coming quarters and consequently anticipates that the unemployment rate will decline gradually toward levels that the Committee judges to be consistent with its dual mandate.
+- `S20130320_0007` [statement] The Committee continues to see downside risks to the economic outlook.
+- `S20131030_0011` [statement] Accordingly, the Committee decided to continue purchasing additional agency mortgage-backed securities at a pace of $40 billion per month and longer-term Treasury securities at a pace of $45 billion per month.
+- `S20140129_0020` [statement] In determining how long to maintain a highly accommodative stance of monetary policy, the Committee will also consider other information, including additional measures of labor market conditions, indicators of inflation pressures and inflation expectations, and readings on financial developments.
+- `S20140618_0009` [statement] The Committee recognizes that inflation persistently below its 2 percent objective could pose risks to economic performance, and it is monitoring inflation developments carefully for evidence that inflation will move back toward its objective over the medium term.
+- `S20140917_0004` [statement] Inflation has been running below the Committee's longer-run objective.
+- `S20150917_0015` [statement] The Committee anticipates that it will be appropriate to raise the target range for the federal funds rate when it has seen some further improvement in the labor market and is reasonably confident that inflation will move back to its 2 percent objective over the medium term.
+- `S20150917_0016` [statement] The Committee is maintaining its existing policy of reinvesting principal payments from its holdings of agency debt and agency mortgage-backed securities in agency mortgage-backed securities and of rolling over maturing Treasury securities at auction.
+- `S20161102_0000` [statement] Information received since the Federal Open Market Committee met in September indicates that the labor market has continued to strengthen and growth of economic activity has picked up from the modest pace seen in the first half of this year.
+- `S20170315_0001` [statement] Job gains remained solid and the unemployment rate was little changed in recent months.
+- `S20170726_0010` [statement] The stance of monetary policy remains accommodative, thereby supporting some further strengthening in labor market conditions and a sustained return to 2 percent inflation.
+- `S20180131_0003` [statement] Market-based measures of inflation compensation have increased in recent months but remain low; survey-based measures of longer-term inflation expectations are little changed, on balance.
+- `S20190130_0005` [statement] Consistent with its statutory mandate, the Committee seeks to foster maximum employment and price stability.
+- `S20190619_0008` [statement] In light of these uncertainties and muted inflation pressures, the Committee will closely monitor the implications of incoming information for the economic outlook and will act as appropriate to sustain the expansion, with a strong labor market and inflation near its symmetric 2 percent objective.
+- `S20190918_0000` [statement] Information received since the Federal Open Market Committee met in July indicates that the labor market remains strong and that economic activity has been rising at a moderate rate.
+- `S20200315_0022` [statement] Voting against this action was [NAME], who was fully supportive of all of the actions taken to promote the smooth functioning of markets and the flow of credit to households and businesses but preferred to reduce the target range for the federal funds rate to 1/2 to 3/4 percent at this meeting.
+- `S20200323_0008` [statement] In connection with these plans, the Committee voted unanimously to authorize and direct the Federal Reserve Bank of New York, until instructed otherwise, to execute transactions in the System Open Market Account in accordance with the following domestic policy directive:
+- `S20200916_0005` [statement] The path of the economy will depend significantly on the course of the virus.
+- `S20210317_0011` [statement] In addition, the Federal Reserve will continue to increase its holdings of Treasury securities by at least $80 billion per month and of agency mortgage-backed securities by at least $40 billion per month until substantial further progress has been made toward the Committee's maximum employment and price stability goals.
+- `S20210616_0016` [statement] The Committee's assessments will take into account a wide range of information, including readings on public health, labor market conditions, inflation pressures and inflation expectations, and financial and international developments.
+- `S20220504_0012` [statement] In assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook.
+- `S20220727_0009` [statement] The Committee is strongly committed to returning inflation to its 2 percent objective.
+- `S20230726_0005` [statement] The extent of these effects remains uncertain.
+- `S20240731_0000` [statement] Recent indicators suggest that economic activity has continued to expand at a solid pace.
+- `S20240918_0001` [statement] Job gains have slowed, and the unemployment rate has moved up but remains low.
+
+</details>
+
+<details><summary>30 random minutes sentences (masked text as labelers see it; seed 20261030)</summary>
+
+- `M20000321_0000` [financial_markets] The Manager of the System Open Market Account reported on recent developments in foreign exchange markets.
+- `M20000628_0045` [staff_financial] Open market operations during the intermeeting period were directed toward implementing the desired increased pressure on reserve positions, and the federal funds rate averaged very close to the Committee's 6-1/2 percent target.
+- `M20000628_0096` [participants_views] Looking beyond the near term, a number of members, noting that core measures of consumer prices had been rising more rapidly this year, were concerned that these prices might well continue to accelerate gradually, even assuming that economic expansion would be sustained at a pace close to the economy's potential.
+- `M20000822_0077` [participants_views] These developments had much improved the prospects for a sustainable economic expansion at the prevailing stance of monetary policy.
+- `M20010821_0113` [participants_views] Some members expressed a degree of concern, however, about the longer-term outlook for inflation.
+- `M20020813_0097` [participants_views] In addition, already enacted income tax cuts and the tax expensing provision for certain investment outlays would help to support both consumer and business expenditures.
+- `M20040316_0130` [policy_action] While many viewed it as a close call, all members indicated that they could support a proposal to retain the existing wording involving a slight tilt toward the possibility of some further disinflation.
+- `M20071031_0022` [staff_economic] Real outlays on consumer services were strong in August because of a weather-induced jump in energy services.
+- `M20080808_0018` [staff_economic] The factory utilization rate held steady in June at a rate below its long-run average but was still well above its low rate from [YEAR] through [YEAR].
+- `M20090811_0040` [staff_economic] However, household net worth received a boost from the rise in equity prices since their low in March.
+- `M20091104_0194` [participants_views] Moreover, these participants noted that banks might seek to reduce appreciably their excess reserves as the economy improves by purchasing securities or by easing credit standards and expanding their lending substantially.
+- `M20100316_0184` [policy_action] At the conclusion of the discussion, the Committee voted to authorize and direct the Federal Reserve Bank of New York, until it was instructed otherwise, to execute transactions in the System Account in accordance with the following domestic policy directive:
+- `M20101103_0084` [staff_financial] In the secondary market for syndicated leveraged loans, prices of loans continued to move up and bid-asked spreads narrowed a bit further.
+- `M20101214_0005` [financial_markets] In addition, the Manager updated the Committee on the SOMA's holdings of foreign-currency instruments.
+- `M20110315_0101` [staff_financial] Currency continued to advance at a relatively fast rate in January and February, likely boosted by a strong expansion in foreign holdings of U.S. bank notes.
+- `M20121212_0226` [policy_action] Inflation has been running somewhat below the Committee's longer-run objective, apart from temporary variations that largely reflect fluctuations in energy prices.
+- `M20140129_0077` [other] Drawings must be approved by the Committee (or by the Subcommittee, if the Subcommittee believes that consultation with the full Committee is not feasible in the time available, or by the Chairman, if the Chairman believes that consultation with the Subcommittee is not feasible in the time available) if the swap drawing proposed by a foreign bank exceeds the larger of (i) $200 million or (ii) 15 percent of the size of the swap arrangement.
+- `M20140129_0179` [staff_economic] Over that period, consumer energy prices declined, consumer food prices rose modestly, and core PCE prices--which exclude consumer food and energy prices--increased slightly more than 1 percent.
+- `M20160127_0116` [other] Inflation, employment, and long-term interest rates fluctuate over time in response to economic and financial disturbances.
+- `M20160727_0016` [other] Also, because episodes of financial stress can arise with little warning, policymakers noted the advantage of being operationally ready for such situations; however, they also recognized that such operational readiness could entail some costs.
+- `M20160727_0168` [participants_views] Household spending had been growing strongly, but business fixed investment had been soft.
+- `M20161102_0159` [staff_outlook] Consistent with the downside risks to aggregate demand, the staff viewed the risks to its outlook for the unemployment rate as tilted to the upside.
+- `M20170315_0067` [staff_economic] Although state and local government payrolls expanded in January and February, nominal construction spending by these governments fell sharply in January.
+- `M20180131_0167` [staff_economic] Consumer sentiment in early January, as measured by the University of Michigan Surveys of Consumers, remained upbeat.
+- `M20191030_0213` [staff_outlook] The staff continued to view the uncertainty around its projections for real GDP growth, the unemployment rate, and inflation as generally similar to the average of the past 20 years.
+- `M20200610_0112` [staff_economic] Output in the mining sector—which includes crude oil extraction—also decreased, reflecting the effects of low crude oil prices.
+- `M20200916_0054` [financial_markets] On net, financial conditions eased over the intermeeting period.
+- `M20211103_0211` [policy_action] Members agreed that the postmeeting statement should acknowledge that the sectors of the economy most adversely affected by the pandemic had improved in recent months, but that the summer's rise in COVID-19 cases had slowed their recovery.
+- `M20220615_0083` [staff_financial] Sovereign yields in most AFEs rose over the intermeeting period amid investors' concerns about further inflationary pressures and major central banks' policy communications suggesting a firmer stance of policy.
+- `M20230726_0217` [policy_action] The extent of these effects remains uncertain.
+
+</details>
 
 ## For Dylan
 - (nothing yet)

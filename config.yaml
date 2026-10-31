@@ -143,6 +143,11 @@ labelling:
   human_n: 100
   train_n: 10000
   codebook: codebook/codebook.md
+  pilot:
+    n_per_round: 100
+    statement_weight: 4.0   # statements are 4% of unique sentences; up-weight for the pilot
+    policy_weight: 2.0      # policy_like() keyword heuristic
+    labelers: [haiku, sonnet, opus-low]
 
 analysis:
   lp_horizons:            # local projections, horizons in trading days
