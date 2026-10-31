@@ -1,0 +1,71 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git push --mirror *)",
+      "Bash(git push --delete *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(git rebase *)",
+      "Bash(git filter-branch *)",
+      "Bash(git filter-repo *)",
+      "Bash(git commit --amend *)",
+      "Bash(git branch -D *)",
+      "Bash(git branch -d *)",
+      "Bash(git branch --delete *)",
+      "Bash(rm -rf *)",
+      "Bash(rm -r *)",
+      "Bash(gh repo delete *)",
+      "Bash(gh repo edit *)",
+      "Bash(gh release *)",
+      "Bash(gh gist *)",
+      "Bash(huggingface-cli upload *)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(git push --force *)",
+      "PowerShell(git push -f *)",
+      "PowerShell(git reset --hard *)",
+      "PowerShell(git clean *)",
+      "PowerShell(git rebase *)"
+    ]
+  },
+  "autoMode": {
+    "hard_deny": [
+      "$defaults",
+      "Never force-push, delete remote branches or tags, or rewrite git history (rebase, amend, filter-branch, reset --hard), in any spelling or via any wrapper script.",
+      "Never commit, merge, or push directly on the main branch; all work goes on feature branches merged through GitHub pull requests with a normal merge commit.",
+      "Never change GitHub repository settings, branch protection, rulesets, releases, gists, or secrets, and never use gh pr merge --admin.",
+      "Never delete directories or bulk-delete files (rm -r, Remove-Item -Recurse, shutil.rmtree, find -delete, git clean).",
+      "Never publish anything outside this git repository (Hugging Face Hub, PyPI, gists, external uploads).",
+      "Never call the Anthropic API directly or install/import the anthropic SDK; LLM work runs only as Claude Code subagents.",
+      "Never modify files in C:/Users/dylan/Documents/GT/CS/4641/FedSentiment-NLP (the old repo is read-only).",
+      "Never modify .claude/settings*.json, .claude/hooks/, or .git/hooks, and never pass --no-verify."
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.sh\"",
+            "timeout": 15,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -n \"$ANTHROPIC_API_KEY\" ]; then echo '{\"systemMessage\":\"WARNING: ANTHROPIC_API_KEY is set, so Claude Code may bill the API instead of the Max subscription. Unset it and restart.\"}'; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

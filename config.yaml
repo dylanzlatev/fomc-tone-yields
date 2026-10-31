@@ -1,0 +1,101 @@
+# Single home for every project parameter. Code must read values from here
+# (via ftyields.config.load_config), never hard-code them.
+# Mark undecided items with "# TBD (phase N)".
+
+# Interpreter for the project conda env (always run the project with this).
+python: C:/Users/dylan/anaconda3/envs/ftyields/python.exe
+
+seed: 20261030
+
+# All paths are relative to the repo root (the directory containing this file).
+paths:
+  src: src
+  codebook: codebook
+  labels: labels
+  labels_pilot: labels/pilot
+  labels_gold: labels/gold
+  labels_human: labels/human
+  labels_train: labels/train
+  labels_batches: labels/batches
+  labels_out: labels/out
+  data: data
+  data_raw: data/raw
+  data_interim: data/interim
+  data_processed: data/processed
+  results: results
+  results_tables: results/tables
+  results_figures: results/figures
+  results_macros: results/macros
+  paper: paper
+  tests: tests
+  models_dir: models   # gitignored
+
+sample:
+  start: 2000-01-01
+  end: 2025-12-31
+
+# FRED constant-maturity Treasury yields (percent, daily).
+fred:
+  series:
+    DGS1MO: 1M
+    DGS3MO: 3M
+    DGS1: 1Y
+    DGS2: 2Y
+    DGS5: 5Y
+    DGS7: 7Y
+    DGS10: 10Y
+    DGS20: 20Y
+    DGS30: 30Y
+
+# Yield-curve factors, all in basis points (yields x 100).
+factors:
+  units: bp
+  level:
+    definition: mean of the listed tenors
+    tenors: [2Y, 5Y, 10Y, 30Y]
+  slope:
+    definition: 30Y - 2Y
+    long: 30Y
+    short: 2Y
+  curvature:
+    definition: 2*5Y - 2Y - 30Y
+    belly: 5Y
+    short: 2Y
+    long: 30Y
+
+text:
+  hf_dataset: vtasca/fomc-statements-minutes
+
+# Event alignment rule:
+#   A document released on trading day t maps to the change in yields from the
+#   close of t-1 to the close of t (FOMC statements are released at 2:00pm ET,
+#   before the close, so the day-t close contains the reaction).
+#   A release on a non-trading day maps to the next trading day.
+events:
+  window: close_to_close
+  pre_offset_trading_days: -1    # close t-1
+  post_offset_trading_days: 0    # close t
+  statement_release_time_et: "14:00"
+  non_trading_day_rule: next_trading_day
+  # Minutes release dates / intraday handling: TBD (phase 1)
+
+scoring:
+  roberta_model: gtfintechlab/FOMC-RoBERTa
+  batch_size: 64
+  max_length: 256
+
+labelling:
+  batch_size: 300
+  pilot_n: 100
+  gold_n: 350
+  human_n: 100
+  train_n: 10000
+  codebook: codebook/codebook.md
+
+analysis:
+  lp_horizons:            # local projections, horizons in trading days
+    start: 0
+    end: 60
+  hac_lags:
+    rule: null            # TBD (phase 8): Newey-West lag rule tied to horizon
+  forecast_horizons: []   # TBD (phase 9): meeting-to-meeting plus several horizons

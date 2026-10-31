@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=51200]
+
+  - repo: local
+    hooks:
+      - id: forbid-artifacts
+        name: forbid model checkpoints, interim data and LaTeX build files (gitignored; too large or regenerable)
+        language: fail
+        entry: Do not commit model checkpoints, data/interim, or LaTeX build artifacts
+        files: '(^|/)(models|checkpoints|runs)/|^data/interim/|\.(pt|pth|bin|safetensors|ckpt|onnx|aux|log|out|toc|bbl|blg|fls|fdb_latexmk|synctex\.gz|xdv)$'
