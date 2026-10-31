@@ -1,0 +1,9 @@
+sentence,roberta_score,roberta_p_dovish,roberta_p_hawkish,roberta_p_neutral,roberta_label,finbert_label,finbert_prob
+Employment is strong.,0.988,0.005,0.993,0.002,hawkish,positive,0.7087
+The labor market remains strong and the unemployment rate has declined.,0.9932,0.0016,0.9948,0.0036,hawkish,negative,0.9343
+The unemployment rate has risen and job gains have slowed.,-0.9734,0.986,0.0126,0.0014,dovish,negative,0.9653
+Inflation has eased substantially.,-0.1509,0.5739,0.423,0.0031,dovish,positive,0.9495
+Inflation remains elevated.,0.9987,0.0005,0.9993,0.0002,hawkish,positive,0.6596
+The Committee decided to raise the target range for the federal funds rate.,0.9991,0.0002,0.9993,0.0004,hawkish,neutral,0.8557
+The Committee will be patient as it determines future adjustments.,-0.0001,0.0002,0.0001,0.9998,neutral,neutral,0.9093
+Strains in financial markets have increased.,0.6493,0.1742,0.8236,0.0022,hawkish,negative,0.9556

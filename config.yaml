@@ -135,6 +135,30 @@ scoring:
   roberta_model: gtfintechlab/FOMC-RoBERTa
   batch_size: 64
   max_length: 256
+  # Verified label order of the published FOMC-RoBERTa head (config.json only has LABEL_0/1/2).
+  label_map: {LABEL_0: dovish, LABEL_1: hawkish, LABEL_2: neutral}
+  score_text_col: text            # raw (unmasked) text: the model was trained on unmasked FOMC sentences
+  fp16: true                      # fp16 autocast on CUDA; the run verifies against fp32 and falls back if the diff is too large
+  fp16_check_n: 200               # sentences used for the fp16 vs fp32 check
+  fp16_max_abs_diff: 0.01         # fall back to fp32 if the max |score diff| exceeds this
+  determinism_check_n: 500        # subset rescored to verify that reruns match
+  determinism_tol: 1.0e-6
+  summary_examples: 5             # example sentences per extreme in the printout
+  strong_abs_score: 0.5           # |score| threshold for the "share strong" summary column
+  scores_out: data/processed/roberta_sentence_scores.parquet
+  scores_max_commit_mb: 20        # larger outputs go to data/interim instead
+  scores_fallback_out: data/interim/roberta_sentence_scores.parquet
+  finbert_model: ProsusAI/finbert
+  probe_out: results/tables/sentence_probe   # .csv and .tex are written
+  probe_sentences:
+    - "Employment is strong."
+    - "The labor market remains strong and the unemployment rate has declined."
+    - "The unemployment rate has risen and job gains have slowed."
+    - "Inflation has eased substantially."
+    - "Inflation remains elevated."
+    - "The Committee decided to raise the target range for the federal funds rate."
+    - "The Committee will be patient as it determines future adjustments."
+    - "Strains in financial markets have increased."
 
 labelling:
   batch_size: 300
