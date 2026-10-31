@@ -4,7 +4,7 @@ Running log kept by the orchestrator session. Read this at the start of every se
 (see CLAUDE.md). Newest entries at the top of each section.
 
 ## Current state
-- **Phase:** 0 done (PR from `phase-0-setup`); starting phase 1 (data).
+- **Phase:** 1 (data) in progress on `phase-1-data`; subagent branches `phase-1-data-yields` (FRED, GSW, surprises) and `phase-1-data-calendar` (corpus, event calendar).
 - **Next:** phase 1 — FRED yields, FOMC event calendar, surprise series, text corpus.
 - **Interrupted batch jobs:** none.
 
@@ -12,8 +12,8 @@ Running log kept by the orchestrator session. Read this at the start of every se
 
 | # | Phase | Status | Verified | PR |
 |---|---|---|---|---|
-| 0 | Setup | done | yes | (this PR) |
-| 1 | Data | not started | | |
+| 0 | Setup | done | yes | #1 |
+| 1 | Data | in progress | | |
 | 2 | Text | not started | | |
 | 3 | Codebook | not started | | |
 | 4 | Validation sets | not started | | |
@@ -96,3 +96,37 @@ Running log kept by the orchestrator session. Read this at the start of every se
   transformers stays on 4.x (`<5`) to avoid the v5 API change.
 - 2026-10-30: `run_all.py` stops at the first failing implemented stage (later stages
   depend on earlier ones).
+- 2026-10-30 (phase 1): **Event-day alignment.** Trading days = FRED DGS10 business days.
+  Release at ET datetime d → event day t = d's date if trading day and time < 15:30 ET
+  (CMT quotes are taken ~3:30pm), else the next trading day. Change = y(t) − y(t−1).
+  Recorded in `config.yaml` → `events`.
+- 2026-10-30 (phase 1): **Event dates come from authoritative sources, not the text
+  dataset.** The vtasca dataset's dates are wrong for some unscheduled actions (e.g.
+  the 2008-01-21 call: the cut was announced 2008-01-22 08:20 ET). Statements: USMPD /
+  Bauer–Swanson timestamps + Fed calendar pages; minutes: Fed pages, USMPD, TDW master
+  file; every disagreement logged in `data/processed/calendar_reconciliation.csv`.
+- 2026-10-30 (phase 1): **Rate surprise.** Main = Bauer–Swanson MPS (bp), which ends
+  2023-12-13, so surprise-controlled statement regressions run 2000–2023 (the handoff's
+  fallback rule: "only if unavailable" → it is unavailable for 2024–25). Robustness:
+  MPS_ORTH (NA for 13 dates incl. most of 2020), USMPD STMT (through 2025; different
+  construction), Jarociński–Karadi pc1. Minutes days: surprise = 0 by construction;
+  USMPD minutes-window surprise available from 2005 as an optional control.
+- 2026-10-30 (phase 1): **30Y suspension window (revised).** I expected DGS30 to be
+  missing 2002-02-19 … 2006-02-08; verified that the current FRED file instead fills it
+  with Treasury's extrapolated 30-year rate (a different construction), with breaks at
+  the edges: 2002-02-19 Δ30Y = +17bp vs Δ20Y = +3; 2006-02-09 Δ30Y = −16bp vs Δ20Y = −3.
+  Inside the window daily changes are smooth. Main line: keep the official series, and
+  set to NaN any change whose interval crosses a break date (`fred.series_breaks`;
+  neither break date is an FOMC event day, but 60-day local projections can cross them).
+  Robustness: GSW zero-coupon factors (SVENY02/05/10/30; no gaps), and dropping
+  `fred.suspended_30y_window`.
+- 2026-10-30 (phase 1): **BLAS switched MKL → OpenBLAS.** conda-forge numpy came linked
+  to MKL, whose delay-loaded DLLs crash (0xc06d007f) on any linalg call when python.exe is
+  run without `Library/bin` on PATH (the way every script and agent runs it). Pinned
+  `libblas=*=*openblas`; verified lstsq/polyfit/SVD/statsmodels HAC OLS, torch CUDA and
+  the RoBERTa pipeline all work; `tests/test_env.py` guards it.
+- 2026-10-30 (phase 1): `data/raw/** -text` in `.gitattributes` so committed raw files
+  are byte-identical to the downloads (manifest SHA-256 stays valid).
+- 2026-10-30: **Note for phases 5–6.** FOMC-RoBERTa was fine-tuned on the TDW labels,
+  so RoBERTa-vs-TDW agreement is (partly) in-sample. Report it with that caveat; use the
+  TDW test split and say we can't rule out that the released model saw it.

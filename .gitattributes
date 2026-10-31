@@ -3,3 +3,5 @@
 *.pdf binary
 *.xlsx binary
 *.parquet binary
+# Raw downloads are stored byte-exact so they match the SHA-256 in data/raw/MANIFEST.csv
+data/raw/** -text

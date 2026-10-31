@@ -38,3 +38,6 @@ __pycache__/
 
 # conda env-create temp files
 condaenv.*.requirements.txt
+
+# Agent worktrees
+.claude/worktrees/
